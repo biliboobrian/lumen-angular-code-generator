@@ -3,7 +3,8 @@
 namespace biliboobrian\lumenAngularCodeGenerator\Provider;
 
 use Illuminate\Support\ServiceProvider;
-use biliboobrian\lumenAngularCodeGenerator\Command\GenerateModelCommand;
+use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenModelCommand;
+use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenModelsCommand;
 
 /**
  * Class GeneratorServiceProvider
@@ -17,7 +18,9 @@ class GeneratorServiceProvider extends ServiceProvider
     public function register()
     {
         $this->commands([
-            GenerateModelCommand::class,
+            GenerateLumenModelCommand::class,
+            GenerateLumenModelsCommand::class
         ]);
+
     }
 }

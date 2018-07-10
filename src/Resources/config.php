@@ -14,7 +14,7 @@ if (! function_exists('app_path')) {
 
 return [
     'namespace'       => 'App\Models',
-    'base_class_name' => \Illuminate\Database\Eloquent\Model::class,
+    'base_class_name' => \LushDigital\MicroServiceModelUtils\Models\MicroServiceBaseModel::class,
     'output_path'     => app_path() . '/Models',
     'no_timestamps'   => null,
     'date_format'     => null,

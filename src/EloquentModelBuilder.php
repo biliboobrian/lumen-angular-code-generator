@@ -42,6 +42,11 @@ class EloquentModelBuilder
         $dp->registerDoctrineTypeMapping('set', 'array');
     }
 
+    public function getTableList()
+    {
+        return $this->manager->listTables();
+    }
+
     /**
      * @param Config $config
      * @return EloquentModel

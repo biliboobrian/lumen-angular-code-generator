@@ -9,15 +9,20 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
- * Class GenerateModelCommand
+ * Class GenerateLumenModelsCommand
  * @package biliboobrian\lumenAngularCodeGenerator\Command
  */
-class GenerateModelCommand extends Command
+class GenerateLumenModelsCommand extends Command
 {
     /**
      * @var string
      */
-    protected $name = 'bilibo:generate:model';
+    protected $name = 'bilibo:gen:lumen:models';
+
+/**
+     * @var string
+     */
+    protected $description = 'Generate Eloquent models for all database schema.';
 
     /**
      * @var Generator
@@ -49,9 +54,17 @@ class GenerateModelCommand extends Command
     {
         $config = $this->createConfig();
 
-        $model = $this->generator->generateModel($config);
+        $tables = $this->generator->getTableList();
+        foreach ($tables as $table) {
+            $this->output->writeln(sprintf($table->getName() . " model generation...:\n"));
+            $config['class_name'] = $table->getName();
+            
+            $model = $this->generator->generateModel($config);
+            $this->output->writeln(sprintf('Model %s generated', $model->getName()->getName()));
+        }
 
-        $this->output->writeln(sprintf('Model %s generated', $model->getName()->getName()));
+        
+        
     }
 
     /**
