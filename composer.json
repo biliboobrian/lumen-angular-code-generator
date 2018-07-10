@@ -1,0 +1,20 @@
+{
+    "name": "biliboobrian/lumen-angular-code-generator",
+    "description": "Model, controller, provider and service generator for Lumen 5.6 and Angular 6 from DB schema",
+    "keywords": ["code generator", "scaffolding", "lumen", "angular", "model", "controller", "service", "provider"],
+    "license": "MIT",
+    "autoload": {
+      "psr-4": {
+        "biliboobrian\\lumenAngularCodeGenerator\\": "src/"
+      }
+    },
+    "require": {
+      "doctrine/dbal": "^2.5"
+    },
+    "authors": [{ 
+        "name": "biliboobrian", 
+        "email": "biliboobrian@yahoo.fr"
+    }],
+    "version": "1.0.0",
+    "minimum-stability": "dev"
+  }
