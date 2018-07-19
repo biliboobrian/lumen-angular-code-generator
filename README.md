@@ -61,17 +61,17 @@ By default all controllers provide a set of applicable routes what you can add t
 
 ```php
 //for full tables retrieve
-$router->get(   '/model',                 'AlternativeController@index');
+$router->get(   '/model',                 'ModelController@index');
 
 //for paginated tables retrieve
-$router->get(   '/model',                 'AlternativeController@get');
+$router->get(   '/model',                 'ModelController@get');
 
 
-$router->get(   '/model/{id}/{relation}', 'AlternativeController@getRelationList');
-$router->get(   '/model/{id}',            'AlternativeController@show');
-$router->post(  '/model',                 'AlternativeController@store');
-$router->put(   '/model/{id}',            'AlternativeController@update');
-$router->delete('/model/{id}',            'AlternativeController@destroy');
+$router->get(   '/model/{id}/{relation}', 'ModelController@getRelationList');
+$router->get(   '/model/{id}',            'ModelController@show');
+$router->post(  '/model',                 'ModelController@store');
+$router->put(   '/model/{id}',            'ModelController@update');
+$router->delete('/model/{id}',            'ModelController@destroy');
 ```
 
 
