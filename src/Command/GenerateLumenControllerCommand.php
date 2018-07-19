@@ -9,20 +9,20 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
- * Class GenerateLumenModelCommand
+ * Class GenerateLumenControllerCommand
  * @package biliboobrian\lumenAngularCodeGenerator\Command
  */
-class GenerateLumenModelCommand extends Command
+class GenerateLumenControllerCommand extends Command
 {
     /**
      * @var string
      */
-    protected $name = 'bilibo:lumen:model';
+    protected $name = 'bilibo:lumen:ctrl';
 
 /**
      * @var string
      */
-    protected $description = 'Generate a Eloquent model according to Table passed in argument.';
+    protected $description = 'Generate CRUD controller for a table name.';
 
     /**
      * @var Generator
@@ -54,9 +54,9 @@ class GenerateLumenModelCommand extends Command
     {
         $config = $this->createConfig();
 
-        $model = $this->generator->generateModel($config);
+        $ctrl = $this->generator->generateController($config);
 
-        $this->output->writeln(sprintf('Model %s generated', $model->getName()->getName()));
+        $this->output->writeln(sprintf('Controller %s generated', $ctrl->getName()->getName()));
     }
 
     /**
@@ -96,14 +96,14 @@ class GenerateLumenModelCommand extends Command
     protected function getOptions()
     {
         return [
-            ['table-name', 't', InputOption::VALUE_OPTIONAL, 'Name of the table to use', null],
-            ['output-path', 'o', InputOption::VALUE_OPTIONAL, 'Directory to store generated model', null],
-            ['namespace', 's', InputOption::VALUE_OPTIONAL, 'Namespace of the model', null],
-            ['base-class-name', 'b', InputOption::VALUE_OPTIONAL, 'Class that model must extend', null],
+            ['table-name', 'tn', InputOption::VALUE_OPTIONAL, 'Name of the table to use', null],
+            ['lumen-ctrl-output-path', 'op', InputOption::VALUE_OPTIONAL, 'Directory to store generated controller', null],
+            ['lumen-ctrl-namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace of the controller', null],
+            ['base-class-lumen-ctrl-name', 'bc', InputOption::VALUE_OPTIONAL, 'Class that controller must extend', null],
             ['config', 'c', InputOption::VALUE_OPTIONAL, 'Path to config file to use', null],
-            ['no-timestamps', 'm', InputOption::VALUE_NONE, 'Set timestamps property to false', null],
-            ['date-format', 'f', InputOption::VALUE_OPTIONAL, 'dateFormat property', null],
-            ['connection', 'e', InputOption::VALUE_OPTIONAL, 'Connection property', null],
+            ['no-timestamps', 'ts', InputOption::VALUE_NONE, 'Set timestamps property to false', null],
+            ['date-format', 'df', InputOption::VALUE_OPTIONAL, 'dateFormat property', null],
+            ['connection', 'cn', InputOption::VALUE_OPTIONAL, 'Connection property', null],
         ];
     }
 }

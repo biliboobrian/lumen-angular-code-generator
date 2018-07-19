@@ -9,20 +9,20 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
 /**
- * Class GenerateLumenModelCommand
+ * Class GenerateLumenModelsCommand
  * @package biliboobrian\lumenAngularCodeGenerator\Command
  */
-class GenerateLumenModelCommand extends Command
+class GenerateLumenControllersCommand extends Command
 {
     /**
      * @var string
      */
-    protected $name = 'bilibo:lumen:model';
+    protected $name = 'bilibo:lumen:ctrls';
 
 /**
      * @var string
      */
-    protected $description = 'Generate a Eloquent model according to Table passed in argument.';
+    protected $description = 'Generate CRUD controllers for all tables.';
 
     /**
      * @var Generator
@@ -54,9 +54,25 @@ class GenerateLumenModelCommand extends Command
     {
         $config = $this->createConfig();
 
-        $model = $this->generator->generateModel($config);
+        $tables = $this->generator->getTableList();
+        foreach ($tables as $table) {
+            $modelName = $this->generator->generateModelName($table->getName());
 
-        $this->output->writeln(sprintf('Model %s generated', $model->getName()->getName()));
+            $this->output->write(sprintf(
+                "%sController controller [%s] generation...", 
+                $modelName,
+                $table->getName()
+            ));
+
+            $config->set('class_name', $modelName);
+            $config->set('table_name', $table->getName());
+            
+            $model = $this->generator->generateController($config);
+            $this->output->writeln(sprintf('Done'));
+        }
+
+        $this->output->writeln($config->get('add_route'));
+        
     }
 
     /**
@@ -66,11 +82,6 @@ class GenerateLumenModelCommand extends Command
     {
         $config = [];
 
-        foreach ($this->getArguments() as $argument) {
-            if (!empty($this->argument($argument[0]))) {
-                $config[$argument[0]] = $this->argument($argument[0]);
-            }
-        }
         foreach ($this->getOptions() as $option) {
             if (!empty($this->option($option[0]))) {
                 $config[$option[0]] = $this->option($option[0]);
@@ -85,9 +96,7 @@ class GenerateLumenModelCommand extends Command
      */
     protected function getArguments()
     {
-        return [
-            ['class-name', InputArgument::REQUIRED, 'Name of the table'],
-        ];
+        return [];
     }
 
     /**
@@ -96,14 +105,13 @@ class GenerateLumenModelCommand extends Command
     protected function getOptions()
     {
         return [
-            ['table-name', 't', InputOption::VALUE_OPTIONAL, 'Name of the table to use', null],
-            ['output-path', 'o', InputOption::VALUE_OPTIONAL, 'Directory to store generated model', null],
-            ['namespace', 's', InputOption::VALUE_OPTIONAL, 'Namespace of the model', null],
-            ['base-class-name', 'b', InputOption::VALUE_OPTIONAL, 'Class that model must extend', null],
+            ['lumen-ctrl-output-path', 'o', InputOption::VALUE_OPTIONAL, 'Directory to store generated controllers', null],
+            ['lumen-ctrl-namespace', 's', InputOption::VALUE_OPTIONAL, 'Namespace of the controllers', null],
+            ['base-class-lumen-ctrl-name', 'b', InputOption::VALUE_OPTIONAL, 'Class controllers must extend', null],
             ['config', 'c', InputOption::VALUE_OPTIONAL, 'Path to config file to use', null],
-            ['no-timestamps', 'm', InputOption::VALUE_NONE, 'Set timestamps property to false', null],
-            ['date-format', 'f', InputOption::VALUE_OPTIONAL, 'dateFormat property', null],
-            ['connection', 'e', InputOption::VALUE_OPTIONAL, 'Connection property', null],
+            ['no-timestamps', 't', InputOption::VALUE_NONE, 'Set timestamps property to false', null],
+            ['date-format', 'd', InputOption::VALUE_OPTIONAL, 'dateFormat property', null],
+            ['add-route', 'a', InputOption::VALUE_NONE, 'Add CRUD routes in web.php', null],
         ];
     }
 }

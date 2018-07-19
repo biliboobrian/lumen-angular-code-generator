@@ -17,7 +17,7 @@ class GenerateLumenModelsCommand extends Command
     /**
      * @var string
      */
-    protected $name = 'bilibo:gen:lumen:models';
+    protected $name = 'bilibo:lumen:models';
 
 /**
      * @var string
@@ -56,11 +56,19 @@ class GenerateLumenModelsCommand extends Command
 
         $tables = $this->generator->getTableList();
         foreach ($tables as $table) {
-            $this->output->writeln(sprintf($table->getName() . " model generation...:\n"));
-            $config['class_name'] = $table->getName();
+            $modelName = $this->generator->generateModelName($table->getName());
+
+            $this->output->write(sprintf(
+                "%s model [%s] generation...", 
+                $modelName,
+                $table->getName()
+            ));
+
+            $config->set('class_name', $modelName);
+            $config->set('table_name', $table->getName());
             
             $model = $this->generator->generateModel($config);
-            $this->output->writeln(sprintf('Model %s generated', $model->getName()->getName()));
+            $this->output->writeln(sprintf('Done'));
         }
 
         
@@ -74,11 +82,6 @@ class GenerateLumenModelsCommand extends Command
     {
         $config = [];
 
-        foreach ($this->getArguments() as $argument) {
-            if (!empty($this->argument($argument[0]))) {
-                $config[$argument[0]] = $this->argument($argument[0]);
-            }
-        }
         foreach ($this->getOptions() as $option) {
             if (!empty($this->option($option[0]))) {
                 $config[$option[0]] = $this->option($option[0]);
@@ -93,9 +96,7 @@ class GenerateLumenModelsCommand extends Command
      */
     protected function getArguments()
     {
-        return [
-            ['class-name', InputArgument::REQUIRED, 'Name of the table'],
-        ];
+        return [];
     }
 
     /**
@@ -104,14 +105,13 @@ class GenerateLumenModelsCommand extends Command
     protected function getOptions()
     {
         return [
-            ['table-name', 'tn', InputOption::VALUE_OPTIONAL, 'Name of the table to use', null],
-            ['output-path', 'op', InputOption::VALUE_OPTIONAL, 'Directory to store generated model', null],
-            ['namespace', 'ns', InputOption::VALUE_OPTIONAL, 'Namespace of the model', null],
-            ['base-class-name', 'bc', InputOption::VALUE_OPTIONAL, 'Class that model must extend', null],
-            ['config', 'c', InputOption::VALUE_OPTIONAL, 'Path to config file to use', null],
-            ['no-timestamps', 'ts', InputOption::VALUE_NONE, 'Set timestamps property to false', null],
-            ['date-format', 'df', InputOption::VALUE_OPTIONAL, 'dateFormat property', null],
-            ['connection', 'cn', InputOption::VALUE_OPTIONAL, 'Connection property', null],
+            ['lumen-model-output-path',     'o', InputOption::VALUE_OPTIONAL, 'Directory to store generated model', null],
+            ['lumen-model-namespace',       's', InputOption::VALUE_OPTIONAL, 'Namespace of the model', null],
+            ['base-class-lumen-model-name', 'b', InputOption::VALUE_OPTIONAL, 'Class that model must extend', null],
+            ['config',                      'c', InputOption::VALUE_OPTIONAL, 'Path to config file to use', null],
+            ['no-timestamps',               't', InputOption::VALUE_NONE, 'Set timestamps property to false', null],
+            ['date-format',                 'd', InputOption::VALUE_OPTIONAL, 'dateFormat property', null],
+            ['add-cache', 'a', InputOption::VALUE_OPTIONAL, 'Add Models in caches observer system', null],
         ];
     }
 }
