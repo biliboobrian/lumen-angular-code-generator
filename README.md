@@ -74,6 +74,7 @@ $router->put(   '/model/{id}',            'ModelController@update');
 $router->delete('/model/{id}',            'ModelController@destroy');
 ```
 
+You can add all routes to your web.php using -a option in the bilibo:lumen:ctrls command.
 
 
 ## License
