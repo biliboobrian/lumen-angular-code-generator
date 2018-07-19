@@ -50,6 +50,15 @@ class Config
     {
         return $this->has($key) ? $this->config[$key] : $default;
     }
+    /**
+     * @param string     $key
+     * @param mixed|null $default
+     * @return mixed|null
+     */
+    public function set($key, $value)
+    {
+        $this->config[$key] = $value;
+    }
 
     /**
      * @param string $key

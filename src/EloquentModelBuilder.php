@@ -56,7 +56,7 @@ class EloquentModelBuilder
     {
         $model = new EloquentModel(
             $config->get('class_name'),
-            $config->get('base_class_name'),
+            $config->get('base_class_lumen_model_name'),
             $config->get('table_name')
         );
 
@@ -75,7 +75,7 @@ class EloquentModelBuilder
         $this->setNamespace($model, $config)
             ->setCustomProperties($model, $config)
             ->setFields($model)
-            ->setRelations($model);
+            ->setRelations($model, $config);
 
         return $model;
     }
@@ -87,7 +87,7 @@ class EloquentModelBuilder
      */
     protected function setNamespace(EloquentModel $model, Config $config)
     {
-        $namespace = $config->get('namespace');
+        $namespace = $config->get('lumen_model_namespace');
         $model->setNamespace(new NamespaceModel($namespace));
 
         return $this;
@@ -221,7 +221,7 @@ class EloquentModelBuilder
      * @param EloquentModel $model
      * @return $this
      */
-    protected function setRelations(EloquentModel $model)
+    protected function setRelations(EloquentModel $model, $config)
     {
         $foreignKeys = $this->manager->listTableForeignKeys($model->getTableName());
         foreach ($foreignKeys as $tableForeignKey) {
@@ -233,7 +233,8 @@ class EloquentModelBuilder
             $relation = new BelongsTo(
                 $tableForeignKey->getForeignTableName(),
                 $tableForeignKey->getLocalColumns()[0],
-                $tableForeignColumns[0]
+                $tableForeignColumns[0],
+                $config
             );
             $model->addRelation($relation);
         }
@@ -273,9 +274,9 @@ class EloquentModelBuilder
                         $localColumn   = $foreignKey->getForeignColumns()[0];
 
                         if ($this->isColumnUnique($table, $foreignColumn)) {
-                            $relation = new HasOne($tableName, $foreignColumn, $localColumn);
+                            $relation = new HasOne($tableName, $foreignColumn, $localColumn, $config);
                         } else {
-                            $relation = new HasMany($tableName, $foreignColumn, $localColumn);
+                            $relation = new HasMany($tableName, $foreignColumn, $localColumn, $config);
                         }
 
                         $model->addRelation($relation);
