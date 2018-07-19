@@ -13,10 +13,16 @@ if (! function_exists('app_path')) {
 }
 
 return [
-    'namespace'       => 'App\Models',
-    'base_class_name' => \LushDigital\MicroServiceModelUtils\Models\MicroServiceBaseModel::class,
-    'output_path'     => app_path() . '/Models',
-    'no_timestamps'   => null,
-    'date_format'     => null,
-    'connection'      => null,
+    'lumen_model_namespace'       	=> 'App\Models',
+    'lumen_ctrl_namespace'       	=> 'App\Http\Controllers',
+    'base_class_lumen_model_name' 	=> \biliboobrian\lumenAngularCodeGenerator\Model\MicroServiceExtendModel::class,
+    'base_class_lumen_ctrl_name' 	=> \biliboobrian\lumenAngularCodeGenerator\Controller\CrudExtendController::class,
+    'lumen_model_output_path'     	=> app_path() . '/Models',
+    'lumen_ctrl_output_path'      	=> app_path() . '/Http/Controllers',
+    'no_timestamps'   				=> null,
+    'date_format'     				=> null,
+	'connection'      				=> null,
+	'add_route'      				=> null,
+	'add_cache'      				=> null,
+	
 ];

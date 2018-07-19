@@ -2,6 +2,8 @@
 
 namespace biliboobrian\lumenAngularCodeGenerator\Model;
 
+use biliboobrian\lumenAngularCodeGenerator\Config;
+
 /**
  * Class Relation
  * @package biliboobrian\lumenAngularCodeGenerator\Model
@@ -24,16 +26,22 @@ abstract class Relation
     protected $localColumnName;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * Relation constructor.
      * @param string $tableName
      * @param string $joinColumnName
      * @param string $localColumnName
      */
-    public function __construct($tableName, $joinColumnName, $localColumnName)
+    public function __construct($tableName, $joinColumnName, $localColumnName, $config)
     {
         $this->setTableName($tableName);
         $this->setForeignColumnName($joinColumnName);
         $this->setLocalColumnName($localColumnName);
+        $this->setConfig($config);
     }
 
     /**
@@ -52,6 +60,26 @@ abstract class Relation
     public function setTableName($tableName)
     {
         $this->tableName = $tableName;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * @param string $config
+     *
+     * @return $this
+     */
+    public function setConfig($config)
+    {
+        $this->config = $config;
 
         return $this;
     }

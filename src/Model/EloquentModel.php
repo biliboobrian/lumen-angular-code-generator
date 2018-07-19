@@ -111,7 +111,7 @@ class EloquentModel extends ClassModel
         $reflectionObject = new \ReflectionObject($relation);
         $name             = Str::camel($reflectionObject->getShortName());
 
-        $arguments = [Str::studly($relation->getTableName())];
+        $arguments = [$relation->getConfig()->get('lumen_model_namespace') .'\\'. Str::studly($relation->getTableName())];
         if ($relation instanceof BelongsToMany) {
             $defaultJoinTableName = TitleHelper::getDefaultJoinTableName($this->tableName, $relation->getTableName());
             $joinTableName        = $relation->getJoinTable() === $defaultJoinTableName
