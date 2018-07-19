@@ -9,7 +9,9 @@
       }
     },
     "require": {
-      "doctrine/dbal": "^2.5"
+      "doctrine/dbal": "^2.5",
+      "lushdigital/microservice-crud": "^3.0",
+      "laravel/lumen-framework": "5.6.*"
     },
     "authors": [{ 
         "name": "biliboobrian", 
