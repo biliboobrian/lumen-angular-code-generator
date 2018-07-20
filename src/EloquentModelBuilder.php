@@ -263,7 +263,8 @@ class EloquentModelBuilder
                             $secondForeignTable,
                             $table->getName(),
                             $localColumns[0],
-                            $secondForeignKey->getLocalColumns()[0]
+                            $secondForeignKey->getLocalColumns()[0],
+                            $config
                         );
                         $model->addRelation($relation);
 

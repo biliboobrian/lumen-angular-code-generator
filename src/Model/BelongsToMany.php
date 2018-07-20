@@ -20,10 +20,10 @@ class BelongsToMany extends Relation
      * @param string $foreignColumnName
      * @param string $localColumnName
      */
-    public function __construct($tableName, $joinTable, $foreignColumnName, $localColumnName)
+    public function __construct($tableName, $joinTable, $foreignColumnName, $localColumnName, $config)
     {
         $this->joinTable = $joinTable;
-        parent::__construct($tableName, $foreignColumnName, $localColumnName);
+        parent::__construct($tableName, $foreignColumnName, $localColumnName, $config);
     }
 
     /**

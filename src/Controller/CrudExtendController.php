@@ -115,10 +115,15 @@ class CrudExtendController extends CrudController {
      * @param Request $request
      * @return Response
      */
-    public function getRelationList(Request $request, $id, $relation)
+    public function getRelation(Request $request, $id, $relation)
     {
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
+        $relation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
         $relations = $item->$relation;
-        return $this->generateResponse($this->modelTableName, $relations->toArray());
+        
+
+
+
+        return $this->generateResponse($relation , $relations->toArray());
     }
 }

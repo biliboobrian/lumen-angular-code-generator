@@ -69,10 +69,7 @@ class GenerateLumenControllersCommand extends Command
             
             $model = $this->generator->generateController($config);
             $this->output->writeln(sprintf('Done'));
-        }
-
-        $this->output->writeln($config->get('add_route'));
-        
+        }   
     }
 
     /**

@@ -24,8 +24,9 @@ class Generator
 
     private $routes = [
         ['get', '/%s', '%sController@get'],
-        ['post', '/%s', '%sController@store'],
         ['get', '/%s/{id}', '%sController@show'],
+        ['get', '/%s/{id}/{relation}', '%sController@getRelation'],
+        ['post', '/%s', '%sController@store'],
         ['put', '/%s/{id}', '%sController@update'],
         ['delete', '/%s/{id}', '%sController@destroy']
     ];
@@ -107,7 +108,7 @@ class Generator
     protected function createLine($route, $tableName) {
         return '$router->'. $route[0] .'(\''. sprintf(
             $route[1], 
-            strtolower(str_replace('_', '-', $tableName))
+            strtolower(str_replace('_', '-', $tableName)). 's'
         ). '\', \''. sprintf(
             $route[2], 
             $this->generateModelName($tableName)
