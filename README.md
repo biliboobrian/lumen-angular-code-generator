@@ -1,14 +1,14 @@
 # lumen-angular-code-generator
 
-!! WORK IN PROGRESS FOR FIRST RELEASE!!
+!! WORK IN PROGRESS > ANGULAR GENERATOR !!
 
 Model, controller provider and service generator for lumen 5.6 and angular 6 from DB schema.
 
 ## Installation
 
-Until the first stable release comes out, please use the prefer-source composer flag.
+Use composer to install it in your lumen project.
 
-`composer install biliboobrian/lumen-angular-code-generator --prefer-source`
+`composer require biliboobrian/lumen-angular-code-generator`
 
 Modify your bootstrap/app.php providers to add generators to Artisan.
 
