@@ -27,14 +27,21 @@ class MethodModel extends BaseMethodModel
     protected $body;
 
     /**
+     * @var string
+     */
+    protected $type;
+
+    /**
      * MethodModel constructor.
      * @param string $name
      * @param string $access
      */
-    public function __construct($name, $access = 'public')
+    public function __construct($name, $access = 'public', $type = 'lumen')
     {
         $this->setName($name)
             ->setAccess($access);
+
+        $this->type = $type;
     }
 
     /**
@@ -59,15 +66,23 @@ class MethodModel extends BaseMethodModel
             $function .= 'static ';
         }
 
-        $function .= 'function ' . $this->name . '(' . $this->renderArguments() . ')';
-
+        if($this->type === 'lumen') {
+            $function .= 'function ' . $this->name . '(' . $this->renderArguments() . ')';
+        } else {
+            $function .= $this->name . '(' . $this->renderArguments() . ') {';
+        }
+        
         if ($this->abstract) {
             $function .= ';';
         }
 
         $lines[] = $function;
         if (!$this->abstract) {
-            $lines[] = '{';
+            if($this->type === 'lumen') {
+                $lines[] = '{';
+            }
+                
+
             if ($this->body) {
                 $lines[] = sprintf('    %s', $this->body); // TODO: make body renderable
             }

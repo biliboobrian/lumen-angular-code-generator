@@ -26,16 +26,22 @@ class ArgumentModel extends RenderableModel
     protected $default;
 
     /**
+     * @var string
+     */
+    protected $dbType;
+
+    /**
      * ArgumentModel constructor.
      * @param string $name
      * @param string|null $type
      * @param mixed|null $default
      */
-    public function __construct($name, $type = null, $default = null)
+    public function __construct($name, $type = null, $default = null, $dbType = 'lumen')
     {
         $this->setName($name)
             ->setType($type)
             ->setDefault($default);
+        $this->dbType = $dbType;
     }
 
     /**
@@ -43,11 +49,20 @@ class ArgumentModel extends RenderableModel
      */
     public function toLines()
     {
-        if ($this->type !== null) {
-            return $this->type . ' $' . $this->name .$this->getDefaultLine();
+        if($this->dbType == 'lumen') {
+            if ($this->type !== null) {
+                return $this->type . ' $' . $this->name .$this->getDefaultLine();
+            } else {
+                return '$' . $this->name .$this->getDefaultLine();
+            }
         } else {
-            return '$' . $this->name .$this->getDefaultLine();
+            if ($this->type !== null) {
+                return  $this->name .': '. $this->type .$this->getDefaultLine();
+            } else {
+                return $this->name .$this->getDefaultLine();
+            }
         }
+       
     }
 
     public function getDefaultLine()

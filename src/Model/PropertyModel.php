@@ -25,16 +25,31 @@ class PropertyModel extends BasePropertyModel
     protected $name;
 
     /**
+     * @var string
+     */
+    protected $type;
+
+    /**
+     * @var string
+     */
+    protected $dbType;
+
+    /**
      * PropertyModel constructor.
      * @param string $name
      * @param string $access
      * @param mixed|null $value
+     * @param string $type
      */
-    public function __construct($name, $access = 'public', $value = null)
+    public function __construct($name, $access = 'public', $value = null, $type = 'lumen', $dbType = 'string')
     {
         $this->setName($name)
             ->setAccess($access)
             ->setValue($value);
+        
+        $this->type = $type;
+        $this->dbType = $dbType;
+        
     }
 
     /**
@@ -51,7 +66,13 @@ class PropertyModel extends BasePropertyModel
         if ($this->static) {
             $property .= 'static ';
         }
-        $property .= '$' . $this->name;
+
+        if($this->type == 'lumen') {
+            $property .= '$' . $this->name;
+        } else {
+            $property .= (!$this->value && $this->dbType) ? $this->name . ': ' .$this->dbType : $this->name;
+        }
+        
 
         if ($this->value !== null) {
             $value = $this->renderValue();

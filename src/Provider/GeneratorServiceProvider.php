@@ -7,6 +7,9 @@ use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenModelCommand;
 use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenModelsCommand;
 use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenControllerCommand;
 use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenControllersCommand;
+use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenBulkControllerCommand;
+use biliboobrian\lumenAngularCodeGenerator\Command\GenerateAngularModelCommand;
+use biliboobrian\lumenAngularCodeGenerator\Command\GenerateAngularModelsCommand;
 
 /**
  * Class GeneratorServiceProvider
@@ -23,7 +26,11 @@ class GeneratorServiceProvider extends ServiceProvider
             GenerateLumenModelCommand::class,
             GenerateLumenModelsCommand::class,
             GenerateLumenControllerCommand::class,
-            GenerateLumenControllersCommand::class
+            GenerateLumenControllersCommand::class,
+            GenerateLumenBulkControllerCommand::class,
+            GenerateAngularModelCommand::class,
+            GenerateAngularModelsCommand::class,
+            
         ]);
 
     }

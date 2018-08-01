@@ -14,16 +14,22 @@ use biliboobrian\lumenAngularCodeGenerator\Model\HasOne;
 use biliboobrian\lumenAngularCodeGenerator\Model\HasMany;
 use biliboobrian\lumenAngularCodeGenerator\Model\BelongsTo;
 use biliboobrian\lumenAngularCodeGenerator\Model\BelongsToMany;
-use biliboobrian\lumenAngularCodeGenerator\Model\EloquentModel;
+use biliboobrian\lumenAngularCodeGenerator\Model\AngularModel;
 use biliboobrian\lumenAngularCodeGenerator\Model\VirtualPropertyModel;
 use biliboobrian\lumenAngularCodeGenerator\Exception\GeneratorException;
 
-class EloquentModelBuilder
+class AngularModelBuilder
 {
     /**
      * @var AbstractSchemaManager
      */
     protected $manager;
+
+    /**
+     * @var array
+     */
+    protected $exportProperties = [];
+      
 
     /**
      * Builder constructor.
@@ -49,14 +55,15 @@ class EloquentModelBuilder
 
     /**
      * @param Config $config
-     * @return EloquentModel
+     * @return AngularModel
      * @throws GeneratorException
      */
     public function createModel(Config $config)
     {
-        $model = new EloquentModel(
+        $model = new AngularModel(
             $config->get('class_name'),
-            $config->get('base_class_lumen_model_name'),
+            $config->get('base_class_angular_model_name'),
+            $config->get('base_class_angular_model_from'),
             $config->get('table_name')
         );
 
@@ -64,28 +71,53 @@ class EloquentModelBuilder
             throw new GeneratorException(sprintf('Table %s does not exist', $model->getTableName()));
         }
 
-        $method = new MethodModel('getValidationRules');
-        $method->addArgument(new ArgumentModel('mode', null, "'create'"));
-        $method->addArgument(new ArgumentModel('primaryKeyValue', null, 'null'));
-        $method->setBody('return array();');
-        $method->setDocBlock(new DocBlockModel('{@inheritdoc}'));
-
-        $model->addMethod($method);
-
         $this->setNamespace($model, $config)
             ->setCustomProperties($model, $config)
             ->setFields($model)
-            ->setRelations($model, $config);
+            ->setConstructor($model, $config);
 
+            //  ->setRelations($model, $config);
+        
+        
+        
         return $model;
     }
 
     /**
-     * @param EloquentModel $model
+     * @param AngularModel $model
      * @param Config $config
      * @return $this
      */
-    protected function setNamespace(EloquentModel $model, Config $config)
+    protected function setConstructor(AngularModel $model, Config $config)
+    {
+        $tableDetails       = $this->manager->listTableDetails($model->getTableName());
+        $primaryColumnNames = $tableDetails->getPrimaryKey()->getColumns();
+
+        if (count($primaryColumnNames) > 1) {
+            $primaryColumnNames = [$primaryColumnNames[0]];
+        }
+    
+        $constructBody = 'super(obj, crudService);' .PHP_EOL;
+        $constructBody .= '        this.table = \''. $config->get('table_name') .'s\';' .PHP_EOL;
+        $constructBody .= '        this.primaryKey = \''. $primaryColumnNames[0] .'\';' .PHP_EOL;
+        $constructBody .= '        this.exportProperties = [\''. implode('\', \'', $this->exportProperties) .'\'];' .PHP_EOL;
+
+
+        $constructMethod = new MethodModel('constructor', '', 'angular');
+        $constructMethod->addArgument(new ArgumentModel('obj?', 'Object', null, 'angular'));
+        $constructMethod->addArgument(new ArgumentModel('crudService?', 'CrudService', null, 'angular'));
+        $constructMethod->setBody($constructBody);
+        $model->addMethod($constructMethod, false);
+
+        return $this;
+    }
+
+    /**
+     * @param AngularModel $model
+     * @param Config $config
+     * @return $this
+     */
+    protected function setNamespace(AngularModel $model, Config $config)
     {
         $namespace = $config->get('lumen_model_namespace');
         $model->setNamespace(new NamespaceModel($namespace));
@@ -94,11 +126,11 @@ class EloquentModelBuilder
     }
 
     /**
-     * @param EloquentModel $model
+     * @param AngularModel $model
      * @param Config $config
      * @return $this
      */
-    protected function setCustomProperties(EloquentModel $model, Config $config)
+    protected function setCustomProperties(AngularModel $model, Config $config)
     {
         if ($config->get('no_timestamps') == true) {
             $pNoTimestamps = new PropertyModel('timestamps', 'public', false);
@@ -128,10 +160,10 @@ class EloquentModelBuilder
     }
 
     /**
-     * @param EloquentModel $model
+     * @param AngularModel $model
      * @return $this
      */
-    protected function setFields(EloquentModel $model)
+    protected function setFields(AngularModel $model)
     {
         $tableDetails       = $this->manager->listTableDetails($model->getTableName());
         $primaryColumnNames = $tableDetails->getPrimaryKey()->getColumns();
@@ -140,16 +172,20 @@ class EloquentModelBuilder
         $isAutoincrement = true;
         $columnNames = [];
         $dates = [];
+        $this->exportProperties = [];
+        
         foreach ($tableDetails->getColumns() as $column) {
-            $type = $this->resolveType($column->getType()->getName());
-            if (strcmp($type, '\Carbon\Carbon') == 0) {
-                $dates[] = $column->getName();
-            }
-            $model->addProperty(new VirtualPropertyModel(
-                $column->getName(),
-                $this->resolveType($column->getType()->getName()),
-                $column->getComment()
+
+            $model->addProperty(new PropertyModel(
+                '_'. $column->getName(),
+                'private',
+                $column->getComment(),
+                'angular',
+                $this->resolveType($column->getType()->getName())
+                
             ));
+
+            $this->exportProperties[] = $column->getName();
 
             if (in_array($column->getName(), $primaryColumnNames)) {
                 $isAutoincrement = $column->getAutoincrement();
@@ -161,21 +197,26 @@ class EloquentModelBuilder
             //if (!in_array($column->getName(), $primaryColumnNames)) {
             $columnNames[] = $column->getName();
             //}
+
+            $getMethod = new MethodModel('get '. $column->getName(), 'public', 'angular');
+            $getMethod->setBody('return this.'. $column->getName() .';');
+
+            $model->addMethod($getMethod);
+
+            $setMethod = new MethodModel('set '. $column->getName(), 'public', 'angular');
+            $setMethod->addArgument(new ArgumentModel('val', $this->resolveType($column->getType()->getName()), null, 'angular'));
+            $setMethod->setBody('this.sync = false;'. PHP_EOL . '        this._'. $column->getName() .' = val;');
+
+            $model->addMethod($setMethod);
         }
 
-        $fillableProperty = new PropertyModel('fillable');
-        $fillableProperty->setAccess('protected')
-            ->setValue($columnNames)
-            ->setDocBlock(new DocBlockModel('@var array'));
-        $model->addProperty($fillableProperty);
-
-        if (!empty($dates)) {
+        /* if (!empty($dates)) {
             $datesProperty = new PropertyModel('dates');
             $datesProperty->setAccess('protected')
                 ->setValue($dates)
                 ->setDocBlock(new DocBlockModel('@var array'));
             $model->addProperty($datesProperty);
-        }
+        } 
 
         if (!empty($primaryColumnNames)) {
             $comments = [];
@@ -212,16 +253,16 @@ class EloquentModelBuilder
                     ->setDocBlock((new DocBlockModel())->addContent($comments));
                 $model->addProperty($timestampsProperty);
             }
-        }
+        } */
 
         return $this;
     }
 
     /**
-     * @param EloquentModel $model
+     * @param AngularModel $model
      * @return $this
      */
-    protected function setRelations(EloquentModel $model, $config)
+    protected function setRelations(AngularModel $model, $config)
     {
         $foreignKeys = $this->manager->listTableForeignKeys($model->getTableName());
         foreach ($foreignKeys as $tableForeignKey) {
@@ -318,24 +359,24 @@ class EloquentModelBuilder
     protected function resolveType($type)
     {
         static $typesMap = [
-            'date'                        => '\Carbon\Carbon',
+            'date'                        => 'Date',
             'character varying'           => 'string',
             'boolean'                     => 'boolean',
             'name'                        => 'string',
-            'double precision'            => 'float',
-            'float'                       => 'float',
-            'integer'                     => 'int',
-            'ARRAY'                       => 'array',
-            'json'                        => 'array',
+            'double precision'            => 'number',
+            'float'                       => 'number',
+            'integer'                     => 'number',
+            'ARRAY'                       => 'Array<any>',
+            'json'                        => 'Object',
             'timestamp without time zone' => 'string',
             'text'                        => 'string',
-            'bigint'                      => 'int',
+            'bigint'                      => 'number',
             'string'                      => 'string',
-            'decimal'                     => 'float',
-            'datetime'                    => '\Carbon\Carbon',
-            'array'                       => 'mixed',   // todo test
+            'decimal'                     => 'number',
+            'datetime'                    => 'Date',
+            'array'                       => 'Array<any>',   // todo test
         ];
 
-        return array_key_exists($type, $typesMap) ? $typesMap[$type] : 'mixed';
+        return array_key_exists($type, $typesMap) ? $typesMap[$type] : '__'. $type;
     }
 }

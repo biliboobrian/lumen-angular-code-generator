@@ -17,6 +17,7 @@ use biliboobrian\lumenAngularCodeGenerator\Model\NamespaceModel;
 use biliboobrian\lumenAngularCodeGenerator\Model\ControllerModel;
 use biliboobrian\lumenAngularCodeGenerator\Model\VirtualPropertyModel;
 use biliboobrian\lumenAngularCodeGenerator\Exception\GeneratorException;
+use biliboobrian\lumenAngularCodeGenerator\Model\UseClassModel;
 
 class ControllerBuilder
 {
@@ -68,6 +69,49 @@ class ControllerBuilder
             ->setCustomProperties($ctrl, $config)
             ->setFields($ctrl)
             ->setRelations($ctrl);
+
+        return $ctrl;
+    }
+
+    /**
+     * @param Config $config
+     * @return ControllerModel
+     * @throws GeneratorException
+     */
+    public function createBulkController()
+    {
+        $ctrl = new ControllerModel(
+            'Bulk',
+            null,
+            null
+        );
+
+        $ctrl->setNamespace(new NamespaceModel('App\Http\Controllers'));
+
+        $ctrl->addUses(new UseClassModel('Illuminate\Http\Request'));
+        $ctrl->addUses(new UseClassModel('Illuminate\Support\Facades\DB'));
+
+        $method = new MethodModel('bulk');
+        $method->addArgument(new ArgumentModel('request', 'Request'));
+
+        $methodBody = '$response = array();'. PHP_EOL;
+        $methodBody .= '        foreach($request->all() as $call){'. PHP_EOL;
+        $methodBody .= '            if($call[\'type\'] === \'GET\' || $call[\'type\'] === \'DELETE\'){'. PHP_EOL;
+        $methodBody .= '                $req = Request::create($call[\'path\'], $call[\'type\']);'. PHP_EOL;
+        $methodBody .= '            } else {'. PHP_EOL;
+        $methodBody .= '                $req = Request::create($call[\'path\'], $call[\'type\'], $call[\'data\']);'. PHP_EOL;
+        $methodBody .= '            }'. PHP_EOL;
+        $methodBody .= '            $res = app()->handle($req);'. PHP_EOL;
+        $methodBody .= '            $response[] = json_decode($res->getContent());'. PHP_EOL;
+        $methodBody .= '        }'. PHP_EOL;
+        $methodBody .= ''. PHP_EOL;
+        $methodBody .= '        return $response;'. PHP_EOL;
+
+
+        $method->setBody($methodBody);
+        $method->setDocBlock(new DocBlockModel('{@inheritdoc}'));
+
+        $ctrl->addMethod($method);
 
         return $ctrl;
     }

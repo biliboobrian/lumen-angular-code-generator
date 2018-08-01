@@ -7,13 +7,13 @@ use biliboobrian\lumenAngularCodeGenerator\ControllerBuilder;
 use biliboobrian\lumenAngularCodeGenerator\Exception\GeneratorException;
 
 /**
- * Class Generator
- * @package Krlove\Generator
+ * Class AngularGenerator
+ * @package biliboobrian\lumenAngularCodeGenerator
  */
-class Generator
+class AngularGenerator
 {
     /**
-     * @var EloquentModelBuilder
+     * @var AngularModelBuilder
      */
     protected $modelBuilder;
 
@@ -34,9 +34,9 @@ class Generator
 
     /**
      * Generator constructor.
-     * @param EloquentModelBuilder $ModelBuilder
+     * @param AngularModelBuilder $ModelBuilder
      */
-    public function __construct(EloquentModelBuilder $modelBuilder, ControllerBuilder $ctrlBuilder)
+    public function __construct(AngularModelBuilder $modelBuilder, ControllerBuilder $ctrlBuilder)
     {
         $this->modelBuilder = $modelBuilder;
         $this->ctrlBuilder = $ctrlBuilder;
@@ -157,11 +157,11 @@ class Generator
      */
     protected function resolveModelOutputPath(Config $config)
     {
-        $path = $config->get('lumen_model_output_path', app_path());
+        $path = $config->get('angular_model_output_path', app_path());
         if (!file_exists($path)) {
             mkdir($path, 0755, true);
         }
-        return $path . '/' . $config->get('class_name') . '.php';
+        return $path . '/' . strtolower($config->get('class_name')) . '.ts';
     }
 
     /**

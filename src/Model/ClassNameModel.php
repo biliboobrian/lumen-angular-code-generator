@@ -36,10 +36,11 @@ class ClassNameModel extends RenderableModel
      * @param string $name
      * @param string|null $extends
      */
-    public function __construct($name, $extends = null)
+    public function __construct($name, $extends = null, $type = 'lumen')
     {
         $this->setName($name)
             ->setExtends($extends);
+        $this->type = $type;
     }
 
     /**
@@ -49,7 +50,12 @@ class ClassNameModel extends RenderableModel
     {
         $lines = [];
 
-        $name = '';
+        if($this->type === 'lumen') {
+            $name = '';
+        } else {
+            $name = 'export ';
+        }
+        
         if ($this->final) {
             $name .= 'final ';
         }
@@ -65,8 +71,13 @@ class ClassNameModel extends RenderableModel
             $name .= sprintf(' implements %s', implode(', ', $this->implements));
         }
 
-        $lines[] = $name;
-        $lines[] = '{';
+        if($this->type === 'lumen') {
+            $lines[] = $name;
+            $lines[] = '{';
+        } else {
+            $lines[] = $name . ' {';
+            $lines[] = '';
+        }
 
         return $lines;
     }
