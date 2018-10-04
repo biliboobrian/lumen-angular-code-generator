@@ -24,12 +24,16 @@ class Generator
 
 
     private $routes = [
-        ['get', '/%s', '%sController@get'],
-        ['get', '/%s/{id}', '%sController@show'],
-        ['get', '/%s/{id}/{relation}', '%sController@getRelation'],
-        ['post', '/%s', '%sController@store'],
-        ['put', '/%s/{id}', '%sController@update'],
-        ['delete', '/%s/{id}', '%sController@destroy']
+        ['get',     '/%s',                                  '%sController@get'],
+        ['get',     '/%s/{id}',                             '%sController@getById'],
+        ['get',     '/%s/{id}/{relation}',                  '%sController@getRelation'],
+        ['post',    '/%s',                                  '%sController@store'],
+        ['post',    '/%s/{id}/{relation}',                  '%sController@createRelationWithObject'],
+        ['post',    '/%s/{id}/{relation}/{idRelation}',     '%sController@createRelation'],
+        ['put',     '/%s/{id}',                             '%sController@update'],
+        ['delete',  '/%s/{id}',                             '%sController@destroy'],
+        ['delete',  '/%s/{id}/{relation}',                  '%sController@emptyRelation'],
+        ['delete',  '/%s/{id}/{relation}/{idRelation}',     '%sController@deleteRelation']
     ];
 
     /**

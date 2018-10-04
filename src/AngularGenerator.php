@@ -161,7 +161,7 @@ class AngularGenerator
         if (!file_exists($path)) {
             mkdir($path, 0755, true);
         }
-        return $path . '/' . strtolower($config->get('class_name')) . '.ts';
+        return $path . '/' . str_replace('_', '-', $config->get('table_name')) . '.ts';
     }
 
     /**

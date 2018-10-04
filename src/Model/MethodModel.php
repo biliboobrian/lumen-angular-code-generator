@@ -32,6 +32,11 @@ class MethodModel extends BaseMethodModel
     protected $type;
 
     /**
+     * @var string
+     */
+    protected $returnType;
+
+    /**
      * MethodModel constructor.
      * @param string $name
      * @param string $access
@@ -69,7 +74,7 @@ class MethodModel extends BaseMethodModel
         if($this->type === 'lumen') {
             $function .= 'function ' . $this->name . '(' . $this->renderArguments() . ')';
         } else {
-            $function .= $this->name . '(' . $this->renderArguments() . ') {';
+            $function .= $this->name . '(' . $this->renderArguments() . ')'. $this->renderReturnType() .' {';
         }
         
         if ($this->abstract) {
@@ -113,6 +118,26 @@ class MethodModel extends BaseMethodModel
     }
 
     /**
+     * @return string
+     */
+    public function getReturnType()
+    {
+        return $this->body;
+    }
+
+    /**
+     * @param string $returnType
+     *
+     * @return $this
+     */
+    public function setReturnType($returnType)
+    {
+        $this->returnType = $returnType;
+
+        return $this;
+    }
+
+    /**
      * {@inheritDoc}
      */
     protected function validate()
@@ -122,5 +147,15 @@ class MethodModel extends BaseMethodModel
         }
 
         return parent::validate();
+    }
+
+
+    protected function renderReturnType() 
+    {
+        if($this->returnType) {
+            return ': '. $this->returnType;
+        } else {
+            return '';
+        }
     }
 }

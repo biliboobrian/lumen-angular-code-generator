@@ -15,6 +15,7 @@ use LushDigital\MicroServiceModelUtils\Models\MicroServiceBaseModel;
  */
 abstract class MicroServiceExtendModel extends MicroServiceBaseModel
 {
+
     /**
      * Get the value of the primary key, used to identify this model.
      *

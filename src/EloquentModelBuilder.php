@@ -133,7 +133,7 @@ class EloquentModelBuilder
      */
     protected function setFields(EloquentModel $model)
     {
-        $tableDetails       = $this->manager->listTableDetails($model->getTableName());
+        $tableDetails = $this->manager->listTableDetails($model->getTableName());
         $primaryColumnNames = $tableDetails->getPrimaryKey()->getColumns();
 
         $hasTimestamps = false;
@@ -144,6 +144,15 @@ class EloquentModelBuilder
             $type = $this->resolveType($column->getType()->getName());
             if (strcmp($type, '\Carbon\Carbon') == 0) {
                 $dates[] = $column->getName();
+
+                $n = str_replace('_', '', ucwords($column->getName(), '_'));
+                $method = new MethodModel('set' . $n . 'Atttribute');
+                $method->addArgument(new ArgumentModel('value'));
+                $method->setBody('return intval(strtotime($value) . \'000\');');
+                $method->setDocBlock(new DocBlockModel('{@inheritdoc}'));
+
+                $model->addMethod($method);
+
             }
             $model->addProperty(new VirtualPropertyModel(
                 $column->getName(),
@@ -254,9 +263,9 @@ class EloquentModelBuilder
                     }
 
                     if (count($foreignKeys) === 2 && count($table->getColumns()) === 2) {
-                        $keys               = array_keys($foreignKeys);
-                        $key                = array_search($name, $keys) === 0 ? 1 : 0;
-                        $secondForeignKey   = $foreignKeys[$keys[$key]];
+                        $keys = array_keys($foreignKeys);
+                        $key = array_search($name, $keys) === 0 ? 1 : 0;
+                        $secondForeignKey = $foreignKeys[$keys[$key]];
                         $secondForeignTable = $secondForeignKey->getForeignTableName();
 
                         $relation = new BelongsToMany(
@@ -270,9 +279,9 @@ class EloquentModelBuilder
 
                         break;
                     } else {
-                        $tableName     = $foreignKey->getLocalTableName();
+                        $tableName = $foreignKey->getLocalTableName();
                         $foreignColumn = $localColumns[0];
-                        $localColumn   = $foreignKey->getForeignColumns()[0];
+                        $localColumn = $foreignKey->getForeignColumns()[0];
 
                         if ($this->isColumnUnique($table, $foreignColumn)) {
                             $relation = new HasOne($tableName, $foreignColumn, $localColumn, $config);
@@ -318,22 +327,22 @@ class EloquentModelBuilder
     protected function resolveType($type)
     {
         static $typesMap = [
-            'date'                        => '\Carbon\Carbon',
-            'character varying'           => 'string',
-            'boolean'                     => 'boolean',
-            'name'                        => 'string',
-            'double precision'            => 'float',
-            'float'                       => 'float',
-            'integer'                     => 'int',
-            'ARRAY'                       => 'array',
-            'json'                        => 'array',
+            'date' => '\Carbon\Carbon',
+            'character varying' => 'string',
+            'boolean' => 'boolean',
+            'name' => 'string',
+            'double precision' => 'float',
+            'float' => 'float',
+            'integer' => 'int',
+            'ARRAY' => 'array',
+            'json' => 'array',
             'timestamp without time zone' => 'string',
-            'text'                        => 'string',
-            'bigint'                      => 'int',
-            'string'                      => 'string',
-            'decimal'                     => 'float',
-            'datetime'                    => '\Carbon\Carbon',
-            'array'                       => 'mixed',   // todo test
+            'text' => 'string',
+            'bigint' => 'int',
+            'string' => 'string',
+            'decimal' => 'float',
+            'datetime' => '\Carbon\Carbon',
+            'array' => 'mixed',   // todo test
         ];
 
         return array_key_exists($type, $typesMap) ? $typesMap[$type] : 'mixed';
