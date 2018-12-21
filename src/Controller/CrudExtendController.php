@@ -12,9 +12,6 @@ use LushDigital\MicroServiceCrud\Http\Controllers\CrudController;
 
 class CrudExtendController extends CrudController
 {
-
-
-
     /**
      * Get filtered list of items.
      *
@@ -44,11 +41,11 @@ class CrudExtendController extends CrudController
             $query = call_user_func([$this->getModelClass(), 'query']);
         }
 
-
         $filters = json_decode($request->input('filters'));
         $sortColumn = $request->input('sort-column');
         $sortDirection = $request->input('sort-direction', 'asc'); // default value asc
         $perPage = (int)$request->input('per-page', 10); // default value 10
+        $currentPage = (int)$request->input('current-page', 1); // default value 1
 
         if ($perPage > 100) {
             $perPage = 100;
@@ -66,19 +63,23 @@ class CrudExtendController extends CrudController
 
         //$page = $query->paginate($perPage);
         $b64 = base64_encode(serialize($request->all()));
+        $offset = ($currentPage - 1) * $perPage;
 
-        $page = Cache::tags($tagList)->rememberForever($this->modelTableName . ':search:' . $b64, function () use ($query, $perPage) {
-            return $query->paginate($perPage);
+        $page = Cache::tags($tagList)->rememberForever($this->modelTableName . ':search:' . $b64, function () use ($query, $perPage, $offset) {
+            return array(
+                'count' => $query->count(),
+                'result' => $query->skip($offset)->take($perPage)->get()
+            );
         });
 
         return $this->generatePaginatedResponse(
             new Paginator(
-                $page->total(),
-                $page->perPage(),
-                $page->currentPage()
+                $page['count'],
+                $perPage,
+                $currentPage
             ),
             $this->modelTableName,
-            $page->items()
+            $page['result']->toArray()
         );
     }
 
@@ -108,16 +109,33 @@ class CrudExtendController extends CrudController
         }
 
         // Check the cache for item data. Otherwise get from the db.
-        $item = Cache::tags($tagList)->rememberForever($this->modelTableName . ':' . $id . ':' . $b64, function () use ($id, $list) {
+        $item = Cache::tags($tagList)->rememberForever($this->modelTableName . ':' . $id . ':' . $b64, function () use ($id, $list, $relations) {
             if ($list) {
-                return call_user_func([$this->getModelClass(), 'with'], $list)->findOrFail($id)->toArray();
+                $obj = call_user_func([$this->getModelClass(), 'with'], $list)->findOrFail($id);
+                $obj = $this->sortcollections($obj, $relations);
+                $returnObj = $this->getSotedRelationship($obj, $relations);
+                
+                return $returnObj;
             } else {
                 return call_user_func([$this->getModelClass(), 'findOrFail'], $id)->toArray();
             }
-
         });
 
         return $this->generateResponse($this->modelTableName, $item);
+    }
+
+    public function getSotedRelationship($obj, $relations) {
+        $returnObj = $obj->toArray();
+        
+        foreach ($relations as $relation) {
+            $relationship = str_replace('-', '_', $relation->table);
+
+            if(isset($obj->$relationship)) {
+                $returnObj[$relationship] = $this->getSotedRelationship($obj->$relationship, $relation->relations);
+            }
+        }
+
+        return $returnObj;
     }
 
     /**
@@ -149,32 +167,51 @@ class CrudExtendController extends CrudController
         return $this->generateResponse($this->modelTableName, $item->toArray());
     }
 
+    private function sortcollections($obj, array $relations)
+    {
+        foreach ($relations as $relation) {
+            $table = str_replace('-', '_', $relation->table);
+            $getTable = lcfirst(str_replace('-', '', ucwords($relation->table, '-')));
+            
+            if(isset($relation->sortColumn)) {
+                if(isset($relation->sortDesc) && $relation->sortDesc === true) {
+                    $obj->$table = $obj->$getTable->sortByDesc($relation->sortColumn)->values();
+                } else {
+                    $obj->$table = $obj->$getTable->sortBy($relation->sortColumn)->values();
+                }
+            }
+            if (property_exists($obj, $table)) { 
+                $obj->$table = $this->sortcollections($obj->$getTable, $relation->relations);
+            } 
+        }
+
+        return $obj;
+    }
+
     private function getTagsList(array $relations)
     {
         $list = array();
 
-
         foreach ($relations as $relation) {
-            foreach ($relation as $key => $value) {
-                if (strpos($key, '.') !== false) {
-                    $key = substr($key, strpos($key, '.') + 1, strlen($key));
-                }
+            $key = $relation->table;
 
-                if (substr($key, -1, 1) === 's') {
-                    $key = substr(str_replace('-', '_', ($key)), 0, -1);
-                } else {
-                    $key = str_replace('-', '_', ($key));
-                }
-
-
-                if (in_array($key, $list) === false) {
-                    array_push($list, $key);
-                }
-
-                $list = array_merge($list, $this->getTagsList($value));
+            if (strpos($key, '.') !== false) {
+                $key = substr($key, strpos($key, '.') + 1, strlen($key));
             }
 
+            if (substr($key, -1, 1) === 's') {
+                $key = substr(str_replace('-', '_', ($key)), 0, -1);
+            } else {
+                $key = str_replace('-', '_', ($key));
+            }
+
+            if (in_array($key, $list) === false) {
+                array_push($list, $key);
+            }
+
+            $list = array_merge($list, $this->getTagsList($relation->relations));
         }
+
         return $list;
     }
 
@@ -182,21 +219,16 @@ class CrudExtendController extends CrudController
     {
         $list = array();
 
-
         foreach ($relations as $relation) {
-
-            foreach ($relation as $key => $value) {
-                $key = lcfirst(str_replace('-', '', ucwords($key, '-')));
-                if ($prefix !== '') {
-                    $key = $prefix . '.' . $key;
-                }
-                array_push($list, $key);
-
-
-                $list = array_merge($list, $this->getRelationsWith($value, $key));
+            $table = lcfirst(str_replace('-', '', ucwords($relation->table, '-')));
+            if ($prefix !== '') {
+                $table = $prefix . '.' . $table;
             }
+            array_push($list, $table);
 
+            $list = array_merge($list, $this->getRelationsWith($relation->relations, $table));
         }
+        
         return $list;
     }
 
@@ -217,13 +249,22 @@ class CrudExtendController extends CrudController
            
                 if ($filters->andLink) {
                     if ($filter->type === 'like') {
-                        $query->where($filter->column, $filter->type, '%' . $filter->value . '%');
+                        if(strpos($filter->value, '*') === 0) {
+                            $query->where($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                        } else {
+                            $query->where($filter->column, $filter->type,  $filter->value . '%');
+                        }
+                        
                     } else {
                         $query->where($filter->column, $filter->type, $filter->value);
                     }
                 } else {
                     if ($filter->type === 'like') {
-                        $query->orWhere($filter->column, $filter->type, '%' . $filter->value . '%');
+                        if(strpos($filter->value, '*') === 0) {
+                            $query->orWhere($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                        } else {
+                            $query->orWhere($filter->column, $filter->type, $filter->value . '%');
+                        }
                     } else {
                         $query->orWhere($filter->column, $filter->type, $filter->value);
                     }
@@ -289,6 +330,27 @@ class CrudExtendController extends CrudController
         // Update the item.
         return $this->getById($request, $item->getPrimaryKeyValue());
     }
+
+    /**
+     * Delete a relation between existing object
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function deleteRelation(Request $request, $id, $relation, $idRelation)
+    {
+        $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
+
+        $itemRelation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
+        $relationQuery = $item->{$itemRelation}();
+
+        $relatedItem = call_user_func([get_class($relationQuery->getRelated()), 'findOrFail'], $idRelation);
+        $relationQuery->detach($relatedItem);
+
+        // Update the item.
+        return $this->getById($request, $item->getPrimaryKeyValue());
+    }
+
 
     /**
      * Create a relation with a fresh Object

@@ -36,7 +36,12 @@ class ImportClassModel extends RenderableModel
      */
     public function toLines()
     {
-        return sprintf('import { %s } from \'%s\';', $this->name, $this->from);
+        if($this->name == '*') {
+            return sprintf('import * as %s from \'%s\';', $this->from, $this->from);
+        } else {
+            return sprintf('import { %s } from \'%s\';', $this->name, $this->from);
+        }
+        
     }
 
     /**

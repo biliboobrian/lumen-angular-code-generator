@@ -20,7 +20,7 @@ return [
     'lumen_model_output_path'     	=> app_path() . '/Models',
     'lumen_ctrl_output_path'      	=> app_path() . '/Http/Controllers',
     'base_class_angular_model_name' => 'BaseModel',
-    'base_class_angular_model_from' => './base-model',
+    'base_class_angular_model_from' => '../base-model',
     'angular_model_output_path'     => app_path() . '/Angular/Models',
     'no_timestamps'   				=> null,
     'date_format'     				=> null,

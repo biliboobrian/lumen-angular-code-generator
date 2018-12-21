@@ -145,6 +145,34 @@ class Generator
         return $ctrl;
     }
 
+     /**
+     * @param Config $config
+     * @return ClassModel
+     * @throws GeneratorException
+     */
+    public function generateRoutes(Config $config)
+    { 
+        $routesFile = file_get_contents(app_path('../routes/').'web.php');
+        $routesLines = explode(PHP_EOL, $routesFile);
+
+        foreach($this->routes as $route) {
+            $find = false;
+            $currentLine = $this->createLine($route, $config->get('table_name'));
+                
+            foreach($routesLines as $line) {
+                if(strpos($line, $currentLine) !== false) {
+                    $find = true;
+                }
+            }
+            if(!$find) {
+                $routesFile .= $currentLine .PHP_EOL;
+            }
+        }
+        $routesFile .= PHP_EOL;
+        
+        file_put_contents(app_path('../routes/').'web.php', $routesFile);
+    }
+
     protected function createLine($route, $tableName) {
         return '$router->'. $route[0] .'(\''. sprintf(
             $route[1], 
