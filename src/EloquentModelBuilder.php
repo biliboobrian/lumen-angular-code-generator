@@ -192,7 +192,7 @@ class EloquentModelBuilder
             if (count($primaryColumnNames) > 1) {
                 $comments[] = 'Eloquent doesn\'t support composite primary keys : ' . implode(', ', $primaryColumnNames);
                 $comments[] = '';
-                $primaryColumnNames = [$primaryColumnNames[0]];
+                $primaryColumnNames = [strtolower($primaryColumnNames[0])];
             }
             if ($primaryColumnNames[0] != 'id') {
                 $comments[] = '@var string';

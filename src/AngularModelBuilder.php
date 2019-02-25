@@ -43,6 +43,11 @@ class AngularModelBuilder
     protected $dateProperties = [];
 
     /**
+     * @var array
+     */
+    protected $boolProperties = [];
+
+    /**
      * Builder constructor.
      * @param DatabaseManager $databaseManager
      */
@@ -120,6 +125,10 @@ class AngularModelBuilder
 
         if(sizeof($this->dateProperties) > 0) {
             $constructBody .= '        this.datePropeties = [' . PHP_EOL . '            \'' . implode('\',' . PHP_EOL . '            \'', $this->dateProperties) . '\'' . PHP_EOL . '        ];' . PHP_EOL . PHP_EOL;
+        }
+
+        if(sizeof($this->boolProperties) > 0) {
+            $constructBody .= '        this.boolPropeties = [' . PHP_EOL . '            \'' . implode('\',' . PHP_EOL . '            \'', $this->boolProperties) . '\'' . PHP_EOL . '        ];' . PHP_EOL . PHP_EOL;
         }
 
         $constructBody .= '        if (obj) {' . PHP_EOL . '            this.importData(obj);' . PHP_EOL . '        }' . PHP_EOL . PHP_EOL;
@@ -225,6 +234,7 @@ class AngularModelBuilder
         $dates = [];
         $this->exportProperties = [];
         $this->dateProperties = [];
+        $this->boolProperties = [];
         $addMomentImport = false;
 
 
@@ -251,6 +261,10 @@ class AngularModelBuilder
             if($column->getType()->getName() === 'date'
             || $column->getType()->getName() === 'datetime') {
                 $this->dateProperties[] = $colName;
+            }
+
+            if($column->getType()->getName() === 'boolean') {
+                $this->boolProperties[] = $colName;
             }
 
             if (in_array($colName, $primaryColumnNames)) {

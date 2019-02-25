@@ -42,6 +42,7 @@ class CrudExtendController extends CrudController
         }
 
         $filters = json_decode($request->input('filters'));
+        $sort = json_decode($request->input('sort'));
         $sortColumn = $request->input('sort-column');
         $sortDirection = $request->input('sort-direction', 'asc'); // default value asc
         $perPage = (int)$request->input('per-page', 10); // default value 10
@@ -57,8 +58,8 @@ class CrudExtendController extends CrudController
 
         // sort
 
-        if ($sortColumn) {
-            $query->orderBy($sortColumn, $sortDirection);
+        if ($sort) {
+            $this->createSorting($query, $sort);
         }
 
         //$page = $query->paginate($perPage);
@@ -155,7 +156,7 @@ class CrudExtendController extends CrudController
         $itemData = $request->all();
 
         foreach ($itemData as $key => $value) {
-            if (DB::connection()->getDoctrineColumn($item->getTable(), $key)->getType()->getName() === 'datetime') {
+            if (array_search($key, $item->getDates()) !== false) {
                 $itemData[$key] = Carbon::createFromTimestampMs($value);
             }
         }
@@ -232,44 +233,26 @@ class CrudExtendController extends CrudController
         return $list;
     }
 
+    private function createSorting($query, $sort) {
+        if(property_exists($sort, 'joinTable')) {
+            $query->join($sort->joinTable, $this->modelTableName .'.'. $sort->tableKey, '=', $sort->joinTable .'.'. $sort->joinKey);
+        } 
+        if(property_exists($sort, 'sortColumn')) {
+            $query->orderBy($sort->sortColumn, $sort->sortDirection);
+        }
+    }
+
     private function createSQLFilter($filters, &$query)
     {
 
         if ($filters->relationName) {
             
             $itemRelation = lcfirst(str_replace('-', '', ucwords($filters->relationName, '-')));
-            $query->whereHas($itemRelation, function ($query) use ($filters) {
-                foreach ($filters->childrens as $child) {
-                    $this->createSQLFilter($child, $query);
-                }
+            $query->whereHas($itemRelation, function ($query) use ($filters) { 
+                $this->applyFilterMembers($filters->members, $filters->andLink, $query);
             });
         } else {
-        
-        foreach ($filters->members as $filter) {
-           
-                if ($filters->andLink) {
-                    if ($filter->type === 'like') {
-                        if(strpos($filter->value, '*') === 0) {
-                            $query->where($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
-                        } else {
-                            $query->where($filter->column, $filter->type,  $filter->value . '%');
-                        }
-                        
-                    } else {
-                        $query->where($filter->column, $filter->type, $filter->value);
-                    }
-                } else {
-                    if ($filter->type === 'like') {
-                        if(strpos($filter->value, '*') === 0) {
-                            $query->orWhere($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
-                        } else {
-                            $query->orWhere($filter->column, $filter->type, $filter->value . '%');
-                        }
-                    } else {
-                        $query->orWhere($filter->column, $filter->type, $filter->value);
-                    }
-                }
-            }
+            $this->applyFilterMembers($filters->members, $filters->andLink, $query);  
         }
 
         if ($filters->childrens && sizeOf($filters->childrens) > 0 && $filters->relationName === null) {
@@ -285,6 +268,34 @@ class CrudExtendController extends CrudController
                         $this->createSQLFilter($child, $query);
                     }
                 });
+            }
+        }
+    }
+
+    private function applyFilterMembers($filters, $andLink, &$query) {
+        foreach ($filters as $filter) {
+           
+            if ($andLink) {
+                if ($filter->type === 'like') {
+                    if(strpos($filter->value, '*') === 0) {
+                        $query->where($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                    } else {
+                        $query->where($filter->column, $filter->type,  $filter->value . '%');
+                    }
+                    
+                } else {
+                    $query->where($filter->column, $filter->type, $filter->value);
+                }
+            } else {
+                if ($filter->type === 'like') {
+                    if(strpos($filter->value, '*') === 0) {
+                        $query->orWhere($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                    } else {
+                        $query->orWhere($filter->column, $filter->type, $filter->value . '%');
+                    }
+                } else {
+                    $query->orWhere($filter->column, $filter->type, $filter->value);
+                }
             }
         }
     }
@@ -306,6 +317,13 @@ class CrudExtendController extends CrudController
 
         // Create the new item.
         $itemData = $request->all();
+        
+        foreach ($itemData as $key => $value) {
+            if (array_search($key, $item->getDates()) !== false) {
+                $itemData[$key] = Carbon::createFromTimestampMs($value);
+            }
+        }
+
         $item->fill($itemData);
         $item->save();
 

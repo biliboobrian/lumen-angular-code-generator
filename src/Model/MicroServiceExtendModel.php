@@ -25,4 +25,9 @@ abstract class MicroServiceExtendModel extends MicroServiceBaseModel
     {
         return $this[$this->primaryKey];
     }
+
+    public function getDates()
+    {
+        return $this->dates;
+    }
 }

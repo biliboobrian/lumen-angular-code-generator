@@ -45,7 +45,7 @@ class EloquentModel extends ClassModel
         $this->tableName = $tableName ?: TitleHelper::getDefaultTableName($className);
 
         if ($this->tableName !== TitleHelper::getDefaultTableName($className)) {
-            $property = new PropertyModel('table', 'protected', $this->tableName);
+            $property = new PropertyModel('table', 'protected', strtolower($this->tableName));
             $property->setDocBlock(new DocBlockModel('The table associated with the model.', '', '@var string'));
             $this->addProperty($property);
         }
