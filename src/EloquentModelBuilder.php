@@ -141,11 +141,12 @@ class EloquentModelBuilder
         $columnNames = [];
         $dates = [];
         foreach ($tableDetails->getColumns() as $column) {
+            $colName = strtolower($column->getName());
             $type = $this->resolveType($column->getType()->getName());
             if (strcmp($type, '\Carbon\Carbon') == 0) {
-                $dates[] = $column->getName();
+                $dates[] = $colName;
 
-                $n = str_replace('_', '', ucwords($column->getName(), '_'));
+                $n = str_replace('_', '', ucwords($colName, '_'));
                 $method = new MethodModel('set' . $n . 'Atttribute');
                 $method->addArgument(new ArgumentModel('value'));
                 $method->setBody('return intval(strtotime($value) . \'000\');');
@@ -155,20 +156,20 @@ class EloquentModelBuilder
 
             }
             $model->addProperty(new VirtualPropertyModel(
-                $column->getName(),
+                $colName,
                 $this->resolveType($column->getType()->getName()),
                 $column->getComment()
             ));
 
-            if (in_array($column->getName(), $primaryColumnNames)) {
+            if (in_array($colName, $primaryColumnNames)) {
                 $isAutoincrement = $column->getAutoincrement();
             }
-            if (in_array($column->getName(), ['created_at', 'updated_at'])) {
+            if (in_array($colName, ['created_at', 'updated_at'])) {
                 $hasTimestamps = true;
                 continue;   // remove timestamps
             }
-            //if (!in_array($column->getName(), $primaryColumnNames)) {
-            $columnNames[] = $column->getName();
+            //if (!in_array($colName, $primaryColumnNames)) {
+            $columnNames[] = $colName;
             //}
         }
 
@@ -240,9 +241,9 @@ class EloquentModelBuilder
             }
 
             $relation = new BelongsTo(
-                $tableForeignKey->getForeignTableName(),
-                $tableForeignKey->getLocalColumns()[0],
-                $tableForeignColumns[0],
+                strtolower($tableForeignKey->getForeignTableName()),
+                strtolower($tableForeignKey->getLocalColumns()[0]),
+                strtolower( $tableForeignColumns[0]),
                 $config
             );
             $model->addRelation($relation);
@@ -269,10 +270,10 @@ class EloquentModelBuilder
                         $secondForeignTable = $secondForeignKey->getForeignTableName();
 
                         $relation = new BelongsToMany(
-                            $secondForeignTable,
-                            $table->getName(),
-                            $localColumns[0],
-                            $secondForeignKey->getLocalColumns()[0],
+                            strtolower($secondForeignTable),
+                            strtolower($table->getName()),
+                            strtolower($localColumns[0]),
+                            strtolower($secondForeignKey->getLocalColumns()[0]),
                             $config
                         );
                         $model->addRelation($relation);
@@ -284,9 +285,17 @@ class EloquentModelBuilder
                         $localColumn = $foreignKey->getForeignColumns()[0];
 
                         if ($this->isColumnUnique($table, $foreignColumn)) {
-                            $relation = new HasOne($tableName, $foreignColumn, $localColumn, $config);
+                            $relation = new HasOne(
+                                strtolower($tableName), 
+                                strtolower($foreignColumn), 
+                                strtolower($localColumn), 
+                                $config);
                         } else {
-                            $relation = new HasMany($tableName, $foreignColumn, $localColumn, $config);
+                            $relation = new HasMany(
+                                strtolower($tableName), 
+                                strtolower($foreignColumn), 
+                                strtolower($localColumn), 
+                                $config);
                         }
 
                         $model->addRelation($relation);

@@ -57,7 +57,7 @@ class GenerateLumenRoutesCommand extends Command
         $tables = $this->generator->getTableList();
         
         foreach ($tables as $table) {
-            $modelName = $this->generator->generateModelName($table->getName());
+            $modelName = $this->generator->generateModelName(strtolower($table->getName()));
 
             $this->output->write(sprintf(
                 "%s routes generation...", 
@@ -66,7 +66,7 @@ class GenerateLumenRoutesCommand extends Command
             ));
 
             $config->set('class_name', $modelName);
-            $config->set('table_name', $table->getName());
+            $config->set('table_name', strtolower($table->getName()));
             
             $this->generator->generateroutes($config);
             $this->output->writeln(sprintf('Done'));

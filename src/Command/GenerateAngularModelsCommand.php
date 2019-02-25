@@ -56,7 +56,7 @@ class GenerateAngularModelsCommand extends Command
 
         $tables = $this->generator->getTableList();
         foreach ($tables as $table) {
-            $modelName = $this->generator->generateModelName($table->getName());
+            $modelName = $this->generator->generateModelName(strtolower($table->getName()));
 
             $this->output->write(sprintf(
                 "%s model [%s] generation...", 

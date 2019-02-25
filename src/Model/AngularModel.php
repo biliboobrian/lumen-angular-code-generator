@@ -71,7 +71,7 @@ class AngularModel extends ClassModel
         
         $this->tableName = $tableName ?: TitleHelper::getDefaultTableName($className);
 
-        $property = new PropertyModel('TABLE', 'public',  str_replace('_', '-', $this->tableName) .'s', 'angular');
+        $property = new PropertyModel('TABLE', 'public',  str_replace('_', '-', strtolower($this->tableName)) .'s', 'angular');
         $property->setStatic(true);
 
         $this->addProperty($property);

@@ -107,8 +107,8 @@ class AngularModelBuilder
         }
 
         $constructBody = 'super(obj, crudService);' . PHP_EOL;
-        $constructBody .= '        this.table = \'' . str_replace('_', '-', $config->get('table_name')) . 's\';' . PHP_EOL;
-        $constructBody .= '        this.primaryKey = \'' . $primaryColumnNames[0] . '\';' . PHP_EOL;
+        $constructBody .= '        this.table = \'' . str_replace('_', '-', strtolower($config->get('table_name'))) . 's\';' . PHP_EOL;
+        $constructBody .= '        this.primaryKey = \'' . strtolower($primaryColumnNames[0]) . '\';' . PHP_EOL;
 
         if(sizeof($this->exportProperties) > 0) {
             $constructBody .= '        this.exportProperties = [' . PHP_EOL . '            \'' . implode('\',' . PHP_EOL . '            \'', $this->exportProperties) . '\'' . PHP_EOL . '        ];' . PHP_EOL . PHP_EOL;
@@ -230,8 +230,15 @@ class AngularModelBuilder
 
         foreach ($tableDetails->getColumns() as $column) {
 
+            $colName = strtolower($column->getName());
+
+            /*if (in_array($colName, ['created_at', 'updated_at'])) {
+                $hasTimestamps = true;
+                continue;   // remove timestamps
+            }*/
+            
             $model->addProperty(new PropertyModel(
-                '_' . $column->getName(),
+                '_' . $colName,
                 'private',
                 $column->getComment(),
                 'angular',
@@ -239,56 +246,59 @@ class AngularModelBuilder
 
             ));
 
-            $this->exportProperties[] = $column->getName();
+            $this->exportProperties[] = $colName;
 
             if($column->getType()->getName() === 'date'
             || $column->getType()->getName() === 'datetime') {
-                $this->dateProperties[] = $column->getName();
+                $this->dateProperties[] = $colName;
             }
 
-            if (in_array($column->getName(), $primaryColumnNames)) {
+            if (in_array($colName, $primaryColumnNames)) {
                 $isAutoincrement = $column->getAutoincrement();
             }
-            if (in_array($column->getName(), ['created_at', 'updated_at'])) {
-                $hasTimestamps = true;
-                continue;   // remove timestamps
-            }
-            //if (!in_array($column->getName(), $primaryColumnNames)) {
-            $columnNames[] = $column->getName();
+           
+            //if (!in_array($colName, $primaryColumnNames)) {
+            $columnNames[] = $colName;
             //}
 
-            $getMethod = new MethodModel('get ' . $column->getName(), 'public', 'angular');
-            $getMethod->setBody('return this._' . $column->getName() . ';');
+            $getMethod = new MethodModel('get ' . $colName, 'public', 'angular');
+            $getMethod->setBody('return this._' . $colName . ';');
 
             
             switch($column->getType()->getName()) {
                 case 'array':
-                $getMethod->setBody('try {' . PHP_EOL . '            return JSON.parse(this._' . $column->getName() . ');' . PHP_EOL . '         } catch (e) {' . PHP_EOL . '            return null;' . PHP_EOL . '        }');
+                $getMethod->setBody('try {' . PHP_EOL . '            return JSON.parse(this._' . $colName . ');' . PHP_EOL . '         } catch (e) {' . PHP_EOL . '            return null;' . PHP_EOL . '        }');
 
                 break;
                 default:
-                $getMethod->setBody('return this._' . $column->getName() . ';');
+                $getMethod->setBody('return this._' . $colName . ';');
 
             }
 
             $model->addMethod($getMethod);
 
-            $setMethod = new MethodModel('set ' . $column->getName(), 'public', 'angular');
-            
+            $setMethod = new MethodModel('set ' . $colName, 'public', 'angular');
             switch($column->getType()->getName()) {
+                case 'datetime':
+                $setMethod->addArgument(new ArgumentModel('val', $this->resolveType($column->getType()->getName()), null, 'angular'));
+                $setMethod->setBody('if (val !== this._' . $colName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $colName . ' = moment(val);' . PHP_EOL . '        }');
+                $addMomentImport = true;
+                
+                break;
                 case 'date':
                 $setMethod->addArgument(new ArgumentModel('val', $this->resolveType($column->getType()->getName()), null, 'angular'));
-                $setMethod->setBody('if (val !== this._' . $column->getName() . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $column->getName() . ' = moment(val);' . PHP_EOL . '        }');
-
+                $setMethod->setBody('if (val !== this._' . $colName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $colName . ' = moment(val);' . PHP_EOL . '        }');
+                $addMomentImport = true;
+                
                 break;
                 case 'array':
                 $setMethod->addArgument(new ArgumentModel('val', 'object', null, 'angular'));
-                $setMethod->setBody('if (!this._' . $column->getName() . ' || this._' . $column->getName() . ' === \'\' || val !== JSON.parse(this._' . $column->getName() . ')) {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $column->getName() . ' = JSON.stringify(val);' . PHP_EOL . '        }');
+                $setMethod->setBody('if (!this._' . $colName . ' || this._' . $colName . ' === \'\' || val !== JSON.parse(this._' . $colName . ')) {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $colName . ' = JSON.stringify(val);' . PHP_EOL . '        }');
 
                 break;
                 default:
                 $setMethod->addArgument(new ArgumentModel('val', $this->resolveType($column->getType()->getName()), null, 'angular'));
-                $setMethod->setBody('if (val !== this._' . $column->getName() . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $column->getName() . ' = val;' . PHP_EOL . '        }');
+                $setMethod->setBody('if (val !== this._' . $colName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $colName . ' = val;' . PHP_EOL . '        }');
 
             }
             
@@ -358,7 +368,7 @@ class AngularModelBuilder
         $foreignKeys = $this->manager->listTableForeignKeys($model->getTableName());
         foreach ($foreignKeys as $tableForeignKey) {
             $tableForeignColumns = $tableForeignKey->getForeignColumns();
-            $tableName = $tableForeignKey->getForeignTableName();
+            $tableName = strtolower($tableForeignKey->getForeignTableName());
             if (count($tableForeignColumns) !== 1) {
                 continue;
             }
@@ -367,14 +377,14 @@ class AngularModelBuilder
             if (count($localColumns) !== 1) {
                 continue;
             }
-            $tableCC = str_replace('_', '', ucwords(ucfirst($tableName), "_"));
+            $tableCC =str_replace('_', '', ucwords(ucfirst(strtolower($tableName)), "_"));
 
             if($tableName !== $model->getTableName()) {
-                $model->addImport(new ImportClassModel($tableCC, './' .str_replace('_', '-', $tableName)));
+                $model->addImport(new ImportClassModel($tableCC, './' .str_replace('_', '-', strtolower($tableName))));
             }
 
             $model->addProperty(new PropertyModel(
-                '_' . $tableName,
+                strtolower('_' . $tableName),
                 'private',
                 null,
                 'angular',
@@ -382,13 +392,13 @@ class AngularModelBuilder
 
             ));
 
-            $getMethod = new MethodModel('get ' . $tableName, 'public', 'angular');
-            $getMethod->setBody('return this._' . $tableName . ';');
+            $getMethod = new MethodModel('get ' . strtolower($tableName), 'public', 'angular');
+            $getMethod->setBody('return this._' . strtolower($tableName) . ';');
             $model->addMethod($getMethod);
 
-            $setMethod = new MethodModel('set ' . $tableName, 'public', 'angular');
+            $setMethod = new MethodModel('set ' . strtolower($tableName), 'public', 'angular');
             $setMethod->addArgument(new ArgumentModel('val', $tableCC, null, 'angular'));
-            $setMethod->setBody('if (val !== this._' . $tableName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $localColumns[0] . ' = (val) ? val.' . $tableForeignColumns[0] .' : null;' . PHP_EOL . '            this._' . $tableName . ' = val;' . PHP_EOL . '        }');
+            $setMethod->setBody('if (val !== this._' . strtolower($tableName) . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . strtolower($localColumns[0]) . ' = (val) ? val.' . strtolower($tableForeignColumns[0]) .' : null;' . PHP_EOL . '            this._' . $tableName . ' = val;' . PHP_EOL . '        }');
 
             $model->addMethod($setMethod);
            //  $model->addRelation($relation);
@@ -415,10 +425,10 @@ class AngularModelBuilder
                         $key = array_search($name, $keys) === 0 ? 1 : 0;
                         $secondForeignKey = $foreignKeys[$keys[$key]];
                         $tableName = $secondForeignKey->getForeignTableName();
-                        $tableCC = str_replace('_', '', ucwords(ucfirst($tableName), "_"));
+                        $tableCC = str_replace('_', '', ucwords(ucfirst(strtolower($tableName)), "_"));
 
                         $model->addProperty(new PropertyModel(
-                            '_' . $tableName . 's',
+                            '_' . strtolower($tableName) . 's',
                             'private',
                             null,
                             'angular',
@@ -427,30 +437,30 @@ class AngularModelBuilder
                         ));
 
                         if($tableName !== $model->getTableName()) {
-                            $model->addImport(new ImportClassModel($tableCC, './' .str_replace('_', '-', $tableName)));
+                            $model->addImport(new ImportClassModel($tableCC, './' .str_replace('_', '-', strtolower($tableName))));
                         }
 
-                        $getMethod = new MethodModel('get ' . $tableName . 's', 'public', 'angular');
-                        $getMethod->setBody('return this._' . $tableName . 's;');
+                        $getMethod = new MethodModel('get ' . strtolower($tableName) . 's', 'public', 'angular');
+                        $getMethod->setBody('return this._' . strtolower($tableName) . 's;');
             
                         $model->addMethod($getMethod);
             
-                        $setMethod = new MethodModel('set ' . $tableName . 's', 'public', 'angular');
+                        $setMethod = new MethodModel('set ' . strtolower($tableName) . 's', 'public', 'angular');
                         $setMethod->addArgument(new ArgumentModel('val', 'Array<' . $tableCC .'>', null, 'angular'));
-                        $setMethod->setBody('if (val !== this._' . $tableName . 's) {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $tableName . 's = val;' . PHP_EOL . '        }');
+                        $setMethod->setBody('if (val !== this._' . strtolower($tableName) . 's) {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . strtolower($tableName) . 's = val;' . PHP_EOL . '        }');
             
                         $model->addMethod($setMethod);
 
-                        $this->relations[] = $tableName . 's';
+                        $this->relations[] = strtolower($tableName . 's');
                         break;
                     } else {
                         $tableName = $foreignKey->getLocalTableName();
                         $foreignColumn = $localColumns[0];
                         $localColumn = $foreignKey->getForeignColumns()[0];
-                        $tableCC = str_replace('_', '', ucwords(ucfirst($tableName), "_"));
+                        $tableCC = str_replace('_', '', ucwords(ucfirst(strtolower($tableName)), "_"));
 
                         $model->addProperty(new PropertyModel(
-                            '_' . $tableName . 's',
+                            '_' . strtolower($tableName) . 's',
                             'private',
                             null,
                             'angular',
@@ -459,20 +469,20 @@ class AngularModelBuilder
                         ));
 
                         if($tableName !== $model->getTableName()) {
-                            $model->addImport(new ImportClassModel($tableCC, './' .str_replace('_', '-', $tableName)));
+                            $model->addImport(new ImportClassModel($tableCC, './' .str_replace('_', '-', strtolower($tableName))));
                         }
-                        $getMethod = new MethodModel('get ' . $tableName . 's', 'public', 'angular');
-                        $getMethod->setBody('return this._' . $tableName . 's;');
+                        $getMethod = new MethodModel('get ' . strtolower($tableName) . 's', 'public', 'angular');
+                        $getMethod->setBody('return this._' . strtolower($tableName) . 's;');
             
                         $model->addMethod($getMethod);
             
-                        $setMethod = new MethodModel('set ' . $tableName . 's', 'public', 'angular');
+                        $setMethod = new MethodModel('set ' . strtolower($tableName) . 's', 'public', 'angular');
                         $setMethod->addArgument(new ArgumentModel('val', 'Array<' . $tableCC .'>', null, 'angular'));
-                        $setMethod->setBody('if (val !== this._' . $tableName . 's) {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $tableName . 's = val;' . PHP_EOL . '        }');
+                        $setMethod->setBody('if (val !== this._' . strtolower($tableName) . 's) {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . strtolower($tableName) . 's = val;' . PHP_EOL . '        }');
             
                         $model->addMethod($setMethod);
 
-                        $this->relations[] = $tableName . 's';
+                        $this->relations[] = strtolower($tableName . 's');
                     }
                 }
             }
@@ -520,6 +530,7 @@ class AngularModelBuilder
             'ARRAY' => 'Array<any>',
             'json' => 'Object',
             'timestamp without time zone' => 'string',
+            'timestamp' => 'any',
             'text' => 'string',
             'bigint' => 'number',
             'string' => 'string',
