@@ -255,7 +255,7 @@ class CrudExtendController extends CrudController
             $this->applyFilterMembers($filters->members, $filters->andLink, $query);  
         }
 
-        if ($filters->childrens && sizeOf($filters->childrens) > 0 && $filters->relationName === null) {
+        if ($filters->childrens && sizeOf($filters->childrens) > 0) {
             if ($filters->andLink) {
                 $query->where(function ($query) use ($filters) {
                     foreach ($filters->childrens as $child) {
