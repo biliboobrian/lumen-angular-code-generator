@@ -276,25 +276,34 @@ class CrudExtendController extends CrudController
         foreach ($filters as $filter) {
            
             if ($andLink) {
-                if ($filter->type === 'like') {
-                    if(strpos($filter->value, '*') === 0) {
-                        $query->where($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                if(!$filter->field) {
+                    if ($filter->type === 'like') {
+                        if(strpos($filter->value, '*') === 0) {
+                            $query->where($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                        } else {
+                            $query->where($filter->column, $filter->type,  $filter->value . '%');
+                        }
+                        
                     } else {
-                        $query->where($filter->column, $filter->type,  $filter->value . '%');
+                        $query->where($filter->column, $filter->type, $filter->value);
                     }
-                    
                 } else {
-                    $query->where($filter->column, $filter->type, $filter->value);
+                    $query->whereColumn($filter->column, $filter->type, $filter->value);
                 }
+               
             } else {
-                if ($filter->type === 'like') {
-                    if(strpos($filter->value, '*') === 0) {
-                        $query->orWhere($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                if(!$filter->field) {
+                    if ($filter->type === 'like') {
+                        if(strpos($filter->value, '*') === 0) {
+                            $query->orWhere($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                        } else {
+                            $query->orWhere($filter->column, $filter->type, $filter->value . '%');
+                        }
                     } else {
-                        $query->orWhere($filter->column, $filter->type, $filter->value . '%');
+                        $query->orWhere($filter->column, $filter->type, $filter->value);
                     }
                 } else {
-                    $query->orWhere($filter->column, $filter->type, $filter->value);
+                    $query->orWhereColumn($filter->column, $filter->type, $filter->value);
                 }
             }
         }
