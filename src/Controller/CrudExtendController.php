@@ -238,7 +238,11 @@ class CrudExtendController extends CrudController
             $query->join($sort->joinTable, $this->modelTableName .'.'. $sort->tableKey, '=', $sort->joinTable .'.'. $sort->joinKey);
         } 
         if(property_exists($sort, 'sortColumn')) {
-            $query->orderBy($sort->sortColumn, $sort->sortDirection);
+            $dir = "asc";
+            if(property_exists($sort, 'sortDirection')) {
+                $dir = $sort->sortDirection;
+            }
+            $query->orderBy($sort->sortColumn, $dir);
         }
     }
 
