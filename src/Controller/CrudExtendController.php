@@ -404,10 +404,23 @@ class CrudExtendController extends CrudController
 
         // Create the new item.
         $itemData = $request->all();
+
+        foreach ($itemData as $key => $value) {
+            if (array_search($key, $relatedItem->getDates()) !== false) {
+                $itemData[$key] = Carbon::createFromTimestampMs($value);
+            }
+        }
+
         $relatedItem->fill($itemData);
 
         $relatedItem->save();
-        $relationQuery->save($relatedItem);
+
+        if(method_exists($relationQuery, 'save')) {
+            $relationQuery->save($relatedItem);
+        } else {
+            $relationQuery->associate($relatedItem);
+            $item->save();
+        }
 
         return $this->getById($request, $item->getPrimaryKeyValue());
     }
