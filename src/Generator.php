@@ -25,6 +25,7 @@ class Generator
 
     private $routes = [
         ['get',     '/%s',                                  '%sController@get'],
+        ['get',     '/%s/index',                            '%sController@index'],
         ['get',     '/%s/{id}',                             '%sController@getById'],
         ['get',     '/%s/{id}/{relation}',                  '%sController@getRelation'],
         ['post',    '/%s',                                  '%sController@store'],

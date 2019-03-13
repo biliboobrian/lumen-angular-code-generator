@@ -99,7 +99,7 @@ class CrudExtendController extends CrudController
         if ($relations) {
             $list = $this->getRelationsWith($relations);
             $tags = $this->getTagsList($relations);
-            $b64 = base64_encode(serialize($list));
+            $b64 = base64_encode(serialize($relations));
         } else {
             $b64 = '';
         }
@@ -225,7 +225,16 @@ class CrudExtendController extends CrudController
             if ($prefix !== '') {
                 $table = $prefix . '.' . $table;
             }
-            array_push($list, $table);
+            if(sizeof($relation->filters) == 0) {
+                array_push($list, $table);
+            } else {
+                $list[$table] = function($query) use ($relation) {
+                    foreach ($relation->filters as $filter) {
+                        $query->where($filter->column, $filter->type, $filter->value);
+                    }
+                };
+            }
+            
 
             $list = array_merge($list, $this->getRelationsWith($relation->relations, $table));
         }
@@ -413,7 +422,6 @@ class CrudExtendController extends CrudController
 
         $relatedItem->fill($itemData);
 
-        $relatedItem->save();
 
         if(method_exists($relationQuery, 'save')) {
             $relationQuery->save($relatedItem);
