@@ -66,8 +66,7 @@ class AngularModel extends ClassModel
         $cn = new ClassNameModel($className, $baseClassName, 'angular');
         $this->setName($cn);
 
-        $this->addImport(new ImportClassModel($baseClassName, $from));
-        $this->addImport(new ImportClassModel('CrudService', '../../services/crud.service'));
+        $this->addImport(new ImportClassModel($baseClassName .', CrudService, CrudColumn', '@biliboobrian/angular-crud'));
         
         $this->tableName = $tableName ?: TitleHelper::getDefaultTableName($className);
 

@@ -97,6 +97,16 @@ class AngularModelBuilder
         return $model;
     }
 
+    protected function exportProp($props) {
+        $propArray = [];
+
+        foreach($props as $prop) {
+            $propArray[] = 'new CrudColumn(\''. $prop->name .'\', CrudColumn.'. $prop->type .', '. $prop->maxLength .', '. $prop->nullable .')';
+        }
+
+        return $propArray;
+    }
+
     /**
      * @param AngularModel $model
      * @param Config $config
@@ -116,7 +126,7 @@ class AngularModelBuilder
         $constructBody .= '        this.primaryKey = \'' . strtolower($primaryColumnNames[0]) . '\';' . PHP_EOL;
 
         if(sizeof($this->exportProperties) > 0) {
-            $constructBody .= '        this.exportProperties = [' . PHP_EOL . '            \'' . implode('\',' . PHP_EOL . '            \'', $this->exportProperties) . '\'' . PHP_EOL . '        ];' . PHP_EOL . PHP_EOL;
+            $constructBody .= '        this.exportProperties = [' . PHP_EOL . '            ' . implode(',' . PHP_EOL . '            ', $this->exportProp($this->exportProperties))  . PHP_EOL . '        ];' . PHP_EOL . PHP_EOL;
         }
         
         if(sizeof($this->relations) > 0) {
@@ -152,7 +162,7 @@ class AngularModelBuilder
         $constructBody = 'return {' . PHP_EOL;
 
         for ($i = 0; $i < count($this->exportProperties); $i++) {
-            $constructBody .= '            ' . $this->exportProperties[$i] . ': this.' . $this->exportProperties[$i];
+            $constructBody .= '            ' . $this->exportProperties[$i]->name . ': this.' . $this->exportProperties[$i]->name;
 
             if ($i === count($this->exportProperties) - 1) {
                 $constructBody .= PHP_EOL;
@@ -256,7 +266,13 @@ class AngularModelBuilder
 
             ));
 
-            $this->exportProperties[] = $colName;
+            $prop = new \stdClass;
+            $prop->name = $colName;
+            $prop->type = $this->resolveTypeForm($this->resolveType($column->getType()->getName()));
+            $prop->maxLength = ($column->getLength())?$column->getLength():0;
+            $prop->nullable = ($column->getNotnull())?'false':'true';
+
+            $this->exportProperties[] = $prop;
 
             if($column->getType()->getName() === 'date'
             || $column->getType()->getName() === 'datetime') {
@@ -542,7 +558,7 @@ class AngularModelBuilder
             'float' => 'number',
             'integer' => 'number',
             'ARRAY' => 'Array<any>',
-            'json' => 'Object',
+            'json' => 'object',
             'timestamp without time zone' => 'string',
             'timestamp' => 'any',
             'text' => 'string',
@@ -551,6 +567,25 @@ class AngularModelBuilder
             'decimal' => 'number',
             'datetime' => 'any',
             'array' => 'string',   // todo test
+        ];
+
+        return array_key_exists($type, $typesMap) ? $typesMap[$type] : '__' . $type;
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return string
+     */
+    protected function resolveTypeForm($type)
+    {
+        static $typesMap = [
+            'any' => 'DATE',
+            'string' => 'STRING',
+            'boolean' => 'BOOL',
+            'number' => 'NUMBER',
+            'Array<any>' => 'OBJECT',
+            'object' => 'OBJECT'
         ];
 
         return array_key_exists($type, $typesMap) ? $typesMap[$type] : '__' . $type;
