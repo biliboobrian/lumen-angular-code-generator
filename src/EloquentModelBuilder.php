@@ -134,7 +134,7 @@ class EloquentModelBuilder
     protected function setFields(EloquentModel $model)
     {
         $tableDetails = $this->manager->listTableDetails($model->getTableName());
-        $primaryColumnNames = $tableDetails->getPrimaryKey()->getColumns();
+        $primaryColumnNames = array_map('strtolower', $tableDetails->getPrimaryKey()->getColumns());
 
         $hasTimestamps = false;
         $isAutoincrement = true;

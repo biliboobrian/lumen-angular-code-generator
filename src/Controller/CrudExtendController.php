@@ -385,7 +385,33 @@ class CrudExtendController extends CrudController
         $relationQuery = $item->{$itemRelation}();
 
         $relatedItem = call_user_func([get_class($relationQuery->getRelated()), 'findOrFail'], $idRelation);
-        $relationQuery->detach($relatedItem);
+        
+        
+        if(method_exists($relationQuery, 'detach')) {
+            $relationQuery->detach($relatedItem);
+        } else {
+            $relatedItem->delete();
+        }
+
+        // Update the item.
+        return $this->getById($request, $item->getPrimaryKeyValue());
+    }
+
+    /**
+     * Delete all records from a relation between existing object
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function emptyRelation(Request $request, $id, $relation)
+    {
+        $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
+
+        $itemRelation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
+        $relationQuery = $item->{$itemRelation}();
+
+        $relatedItem = call_user_func([get_class($relationQuery->getRelated()), 'findOrFail'], $idRelation);
+        $relationQuery->detach();
 
         // Update the item.
         return $this->getById($request, $item->getPrimaryKeyValue());
