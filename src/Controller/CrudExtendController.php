@@ -447,7 +447,7 @@ class CrudExtendController extends CrudController
         }
 
         $relatedItem->fill($itemData);
-
+        $relatedItem->save();
 
         if(method_exists($relationQuery, 'save')) {
             $relationQuery->save($relatedItem);
