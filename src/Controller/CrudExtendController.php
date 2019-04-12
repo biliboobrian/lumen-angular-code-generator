@@ -456,7 +456,9 @@ class CrudExtendController extends CrudController
             $item->save();
         }
 
-        return $this->getById($request, $item->getPrimaryKeyValue());
+        //return $this->getById($request, $relatedItem->getPrimaryKeyValue());
+
+        return $this->generateResponse($relatedItem->getTable(), $relatedItem->toArray());
     }
 
 
