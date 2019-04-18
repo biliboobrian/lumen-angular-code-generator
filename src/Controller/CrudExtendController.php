@@ -255,13 +255,21 @@ class CrudExtendController extends CrudController
         }
     }
 
-    private function createSQLFilter($filters, &$query)
+    private function createSQLFilter($filters, &$query, $rel = null)
     {
 
+        
+        
         if ($filters->relationName) {
-            
             $itemRelation = lcfirst(str_replace('-', '', ucwords($filters->relationName, '-')));
-            $query->whereHas($itemRelation, function ($query) use ($filters) { 
+
+            if($rel) {
+                array_push($rel, $itemRelation);
+            } else {
+                $rel = [$itemRelation];
+            }
+
+            $query->whereHas(implode('.', $rel), function ($query) use ($filters) { 
                 $this->applyFilterMembers($filters->members, $filters->andLink, $query);
             });
         } else {
@@ -270,15 +278,15 @@ class CrudExtendController extends CrudController
 
         if ($filters->childrens && sizeOf($filters->childrens) > 0) {
             if ($filters->andLink) {
-                $query->where(function ($query) use ($filters) {
+                $query->where(function ($query) use ($filters, $rel) {
                     foreach ($filters->childrens as $child) {
-                        $this->createSQLFilter($child, $query);
+                        $this->createSQLFilter($child, $query, $rel);
                     }
                 });
             } else {
-                $query->orWhere(function ($query) use ($filters) {
+                $query->orWhere(function ($query) use ($filters, $rel) {
                     foreach ($filters->childrens as $child) {
-                        $this->createSQLFilter($child, $query);
+                        $this->createSQLFilter($child, $query, $rel);
                     }
                 });
             }
@@ -297,6 +305,8 @@ class CrudExtendController extends CrudController
                             $query->where($filter->column, $filter->type,  $filter->value . '%');
                         }
                         
+                    } else if ($filter->type === 'is null') {
+                        $query->whereNull($filter->column);
                     } else {
                         $query->where($filter->column, $filter->type, $filter->value);
                     }
@@ -312,6 +322,8 @@ class CrudExtendController extends CrudController
                         } else {
                             $query->orWhere($filter->column, $filter->type, $filter->value . '%');
                         }
+                    } else if ($filter->type === 'is null'){
+                        $query->orWhereNull($filter->orWhereColumn);
                     } else {
                         $query->orWhere($filter->column, $filter->type, $filter->value);
                     }
