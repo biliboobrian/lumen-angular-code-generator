@@ -300,9 +300,9 @@ class CrudExtendController extends CrudController
                 if(!$filter->field) {
                     if ($filter->type === 'like') {
                         if(strpos($filter->value, '*') === 0) {
-                            $query->where($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                            $query->whereRaw('lower('. $filter->column .') '. $filter->type . ' ?', '%' . strtolower(substr($filter->value, 1)) . '%');
                         } else {
-                            $query->where($filter->column, $filter->type,  $filter->value . '%');
+                            $query->whereRaw('lower('. $filter->column .') '. $filter->type . ' ?',  strtolower($filter->value) . '%');
                         }
                         
                     } else if ($filter->type === 'is null') {
@@ -318,9 +318,9 @@ class CrudExtendController extends CrudController
                 if(!$filter->field) {
                     if ($filter->type === 'like') {
                         if(strpos($filter->value, '*') === 0) {
-                            $query->orWhere($filter->column, $filter->type, '%' . substr($filter->value, 1) . '%');
+                            $query->orWhereRaw('lower('. $filter->column .') '. $filter->type . ' ?', '%' . strtolower(substr($filter->value, 1)) . '%');
                         } else {
-                            $query->orWhere($filter->column, $filter->type, $filter->value . '%');
+                            $query->orWhereRaw('lower('. $filter->column .') '. $filter->type . ' ?',  strtolower($filter->value) . '%');
                         }
                     } else if ($filter->type === 'is null'){
                         $query->orWhereNull($filter->orWhereColumn);
