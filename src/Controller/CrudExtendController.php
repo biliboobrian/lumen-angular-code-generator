@@ -69,7 +69,7 @@ class CrudExtendController extends CrudController
         $page = Cache::tags($tagList)->rememberForever($this->modelTableName . ':search:' . $b64, function () use ($query, $perPage, $offset) {
             return array(
                 'count' => $query->count(),
-                'result' => $query->skip($offset)->take($perPage)->get()
+                'result' => $query->skip($offset)->take($perPage)->get([$this->modelTableName .'.*'])
             );
         });
 
