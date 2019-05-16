@@ -311,13 +311,13 @@ class AngularModelBuilder
             switch($column->getType()->getName()) {
                 case 'datetime':
                 $setMethod->addArgument(new ArgumentModel('val', $this->resolveType($column->getType()->getName()), null, 'angular'));
-                $setMethod->setBody('if (val !== this._' . $colName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $colName . ' = moment(val);' . PHP_EOL . '        }');
+                $setMethod->setBody('if (val !== this._' . $colName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            if (val) {' . PHP_EOL . '                this._' . $colName . ' = moment(val);' . PHP_EOL . '            } else {' . PHP_EOL . '                this._' . $colName . ' = null;' . PHP_EOL . '            }' . PHP_EOL . '        }');
                 $addMomentImport = true;
                 
                 break;
                 case 'date':
                 $setMethod->addArgument(new ArgumentModel('val', $this->resolveType($column->getType()->getName()), null, 'angular'));
-                $setMethod->setBody('if (val !== this._' . $colName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            this._' . $colName . ' = moment(val);' . PHP_EOL . '        }');
+                $setMethod->setBody('if (val !== this._' . $colName . ') {' . PHP_EOL . '            this.sync = false;' . PHP_EOL . '            if (val) {' . PHP_EOL . '                this._' . $colName . ' = moment(val);' . PHP_EOL . '            } else {' . PHP_EOL . '                this._' . $colName . ' = null;' . PHP_EOL . '            }' . PHP_EOL . '        }');
                 $addMomentImport = true;
                 
                 break;

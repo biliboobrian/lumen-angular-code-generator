@@ -307,6 +307,8 @@ class CrudExtendController extends CrudController
                         
                     } else if ($filter->type === 'is null') {
                         $query->whereNull($filter->column);
+                    } else if ($filter->type === 'in') {
+                        $query->whereIn($filter->column, explode(',', $filter->value));
                     } else {
                         $query->where($filter->column, $filter->type, $filter->value);
                     }
@@ -324,6 +326,8 @@ class CrudExtendController extends CrudController
                         }
                     } else if ($filter->type === 'is null'){
                         $query->orWhereNull($filter->orWhereColumn);
+                    } else if ($filter->type === 'in') {
+                        $query->orWhereIn($filter->column, explode(',', $filter->value));
                     } else {
                         $query->orWhere($filter->column, $filter->type, $filter->value);
                     }
