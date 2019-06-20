@@ -390,7 +390,14 @@ class CrudExtendController extends CrudController
         $relationQuery = $item->{$itemRelation}();
 
         $relatedItem = call_user_func([get_class($relationQuery->getRelated()), 'findOrFail'], $idRelation);
-        $relationQuery->save($relatedItem);
+
+        if(method_exists($relationQuery, 'save')) {
+            $relationQuery->save($relatedItem);
+        } else {
+            $relatedItem->save();
+            $relationQuery->associate($relatedItem);
+            $item->save();
+        }
 
         // Update the item.
         return $this->getById($request, $item->getPrimaryKeyValue());
