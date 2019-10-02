@@ -366,7 +366,7 @@ class CrudExtendController extends CrudController
         $itemData = $request->all();
         
         foreach ($itemData as $key => $value) {
-            if (array_search($key, $item->getDates()) !== false) {
+            if (array_search($key, $item->getDates()) !== false && $value) {
                 $itemData[$key] = Carbon::createFromTimestampMs($value);
             }
         }
