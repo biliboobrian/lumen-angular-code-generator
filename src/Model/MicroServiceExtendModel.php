@@ -6,12 +6,12 @@
 
 namespace biliboobrian\lumenAngularCodeGenerator\Model;
 
-use LushDigital\MicroServiceModelUtils\Models\MicroServiceBaseModel;
+use biliboobrian\MicroServiceModelUtils\Models\MicroServiceBaseModel;
 
 /**
  * A base model class that can be used in a microservice.
  *
- * @package LushDigital\MicroServiceModelUtils\Models\MicroServiceBaseModel
+ * @package biliboobrian\MicroServiceModelUtils\Models\MicroServiceBaseModel
  */
 abstract class MicroServiceExtendModel extends MicroServiceBaseModel
 {

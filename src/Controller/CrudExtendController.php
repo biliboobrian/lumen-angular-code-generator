@@ -7,8 +7,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use LushDigital\MicroServiceCore\Pagination\Paginator;
-use LushDigital\MicroServiceCrud\Http\Controllers\CrudController;
+use biliboobrian\MicroServiceCore\Pagination\Paginator;
+use biliboobrian\MicroServiceCrud\Http\Controllers\CrudController;
 
 class CrudExtendController extends CrudController
 {

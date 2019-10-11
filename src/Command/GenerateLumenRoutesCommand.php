@@ -57,19 +57,21 @@ class GenerateLumenRoutesCommand extends Command
         $tables = $this->generator->getTableList();
         
         foreach ($tables as $table) {
-            $modelName = $this->generator->generateModelName(strtolower($table->getName()));
+            if(strtolower($table->getName()) !== 'migrations') {
+                $modelName = $this->generator->generateModelName(strtolower($table->getName()));
 
-            $this->output->write(sprintf(
-                "%s routes generation...", 
-                $modelName,
-                $table->getName()
-            ));
+                $this->output->write(sprintf(
+                    "%s routes generation...", 
+                    $modelName,
+                    $table->getName()
+                ));
 
-            $config->set('class_name', $modelName);
-            $config->set('table_name', strtolower($table->getName()));
-            
-            $this->generator->generateroutes($config);
-            $this->output->writeln(sprintf('Done'));
+                $config->set('class_name', $modelName);
+                $config->set('table_name', strtolower($table->getName()));
+                
+                $this->generator->generateroutes($config);
+                $this->output->writeln(sprintf('Done'));
+            }
         } 
 
         $this->output->writeln('Missing routes generated');

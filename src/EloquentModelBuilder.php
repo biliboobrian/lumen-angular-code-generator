@@ -234,6 +234,7 @@ class EloquentModelBuilder
     protected function setRelations(EloquentModel $model, $config)
     {
         $foreignKeys = $this->manager->listTableForeignKeys($model->getTableName());
+
         foreach ($foreignKeys as $tableForeignKey) {
             $tableForeignColumns = $tableForeignKey->getForeignColumns();
             if (count($tableForeignColumns) !== 1) {
@@ -254,10 +255,10 @@ class EloquentModelBuilder
             if ($table->getName() === $model->getTableName()) {
                 continue;
             }
-
+            
             $foreignKeys = $table->getForeignKeys();
             foreach ($foreignKeys as $name => $foreignKey) {
-                if ($foreignKey->getForeignTableName() === $model->getTableName()) {
+                if (strtolower($foreignKey->getForeignTableName()) === $model->getTableName()) {
                     $localColumns = $foreignKey->getLocalColumns();
                     if (count($localColumns) !== 1) {
                         continue;

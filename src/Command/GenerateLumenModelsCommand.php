@@ -56,19 +56,21 @@ class GenerateLumenModelsCommand extends Command
 
         $tables = $this->generator->getTableList();
         foreach ($tables as $table) {
-            $modelName = $this->generator->generateModelName(strtolower($table->getName()));
+            if(strtolower($table->getName()) !== 'migrations') {
+                $modelName = $this->generator->generateModelName(strtolower($table->getName()));
 
-            $this->output->write(sprintf(
-                "%s model [%s] generation...", 
-                $modelName,
-                $table->getName()
-            ));
+                $this->output->write(sprintf(
+                    "%s model [%s] generation...", 
+                    $modelName,
+                    $table->getName()
+                ));
 
-            $config->set('class_name', $modelName);
-            $config->set('table_name', $table->getName());
-            
-            $model = $this->generator->generateModel($config);
-            $this->output->writeln(sprintf('Done'));
+                $config->set('class_name', $modelName);
+                $config->set('table_name', $table->getName());
+                
+                $model = $this->generator->generateModel($config);
+                $this->output->writeln(sprintf('Done'));
+            }
         }
 
         

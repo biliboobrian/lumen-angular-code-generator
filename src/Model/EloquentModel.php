@@ -38,10 +38,10 @@ class EloquentModel extends ClassModel
     public function __construct($className, $baseClassName, $tableName = null)
     {
         $cn = new ClassNameModel($className, ClassHelper::getShortClassName($baseClassName));
-        $cn->addImplements(ClassHelper::getShortClassName(LushDigital\MicroServiceCrud\Models\CrudModelInterface::class));
+        $cn->addImplements(ClassHelper::getShortClassName(biliboobrian\MicroServiceCrud\Models\CrudModelInterface::class));
         $this->setName($cn);
         $this->addUses(new UseClassModel(ltrim($baseClassName, '\\')));
-        $this->addUses(new UseClassModel('LushDigital\MicroServiceCrud\Models\CrudModelInterface'));
+        $this->addUses(new UseClassModel('biliboobrian\MicroServiceCrud\Models\CrudModelInterface'));
         $this->tableName = $tableName ?: TitleHelper::getDefaultTableName($className);
 
         if ($this->tableName !== TitleHelper::getDefaultTableName($className)) {

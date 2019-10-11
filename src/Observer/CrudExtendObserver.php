@@ -2,8 +2,8 @@
 namespace biliboobrian\lumenAngularCodeGenerator\Observer;
 
 use Illuminate\Support\Facades\Cache;
-use LushDigital\MicroServiceModelUtils\Contracts\Cacheable;
-use LushDigital\MicroServiceModelUtils\Traits\MicroServiceCacheTrait;
+use biliboobrian\MicroServiceModelUtils\Contracts\Cacheable;
+use biliboobrian\MicroServiceModelUtils\Traits\MicroServiceCacheTrait;
 
 /**
  * Observer class to act on CRUD item modifications.
