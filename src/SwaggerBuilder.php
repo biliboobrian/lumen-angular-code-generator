@@ -18,7 +18,7 @@ use biliboobrian\lumenAngularCodeGenerator\Model\EloquentModel;
 use biliboobrian\lumenAngularCodeGenerator\Model\VirtualPropertyModel;
 use biliboobrian\lumenAngularCodeGenerator\Exception\GeneratorException;
 
-class EloquentModelBuilder
+class SwaggerBuilder
 {
     /**
      * @var AbstractSchemaManager
@@ -34,7 +34,7 @@ class EloquentModelBuilder
         try {
             $this->manager = $databaseManager->connection()->getDoctrineSchemaManager();
         } catch (\Exception $e) {   // connection error
-            echo $e->getMessage();
+            echo env('DB_USERNAME');
             return;
         }
         $dp = $this->manager->getDatabasePlatform();
@@ -52,44 +52,230 @@ class EloquentModelBuilder
      * @return EloquentModel
      * @throws GeneratorException
      */
-    public function createModel(Config $config)
+    public function createInfoFile(Config $config)
     {
-        if($this->manager->getDatabasePlatform()->getName() === "oracle") {
-            $model = new EloquentModel(
-                $config->get('class_name'),
-                $config->get('base_class_lumen_model_oracle_name'),
-                $config->get('table_name')
-            );
-        } else {
-            $model = new EloquentModel(
-                $config->get('class_name'),
-                $config->get('base_class_lumen_model_name'),
-                $config->get('table_name')
-            );
-        }
+        $swagger = array();
+        $swagger[] = "<?php";
+        $swagger[] = "";
+        $swagger[] = "/**";
+
+        $swagger = $this->createInfo(
+            $swagger,
+            "API swagger description.",
+            "1.0.0",
+            "API"
+        );
+
+        $swagger = $this->createSchema(
+            $swagger, 
+            'Filters',
+            'Filters object used by all get collection methods',
+            ['code'],
+            [
+                [
+                    'andLink',
+                    "Make all the 'members' Filter apply in query with AND or OR",
+                    'true',
+                    'boolean',
+                    null
+                ], 
+                [
+                    'members',
+                    "Array of filter to apply in query as following: (member[0] andLink member[1])",
+                    null,
+                    'array',
+                    '#/components/schemas/Filter'
+                ], 
+                [
+                    'childrens',
+                    "Filters: Children of this Filters for complex query , will apply them as the following: Filters.andLink ( child.member[0] child.andLink child.member[1])",
+                    null,
+                    'array',
+                    '#/components/schemas/Filters'
+                ], 
+                [
+                    'relationName',
+                    "Joining name you want to use for the query",
+                    null,
+                    'string',
+                    null
+                ], 
+            ]
+        );
+
+        $swagger = $this->createSchema(
+            $swagger, 
+            'Filter',
+            'Filter object describing the the fild and value you want to filter',
+            ['column', "value", "operation"],
+            [
+                [
+                    'column',
+                    "Column used for the filter",
+                    null,
+                    'string',
+                    null
+                ], 
+                [
+                    'value',
+                    "Value to match for the selected column",
+                    null,
+                    'string',
+                    null
+                ], 
+                [
+                    'operation',
+                    "Operation between column and value as following: column operation column > ex: username = 'John'",
+                    null,
+                    'string',
+                    null
+                ], 
+                [
+                    'field',
+                    "Specify if the value is a column, ex: username = firstname",
+                    'false',
+                    'boolean',
+                    null
+                ], 
+                [
+                    'type',
+                    "ype of the value, ex: string, boolean, date",
+                    'string',
+                    'string',
+                    null
+                ], 
+            ]
+        );
+
+        $swagger = $this->createSchema(
+            $swagger, 
+            'CrudResponse',
+            'Response object that wrap all data',
+            ['code', "data"],
+            [
+                [
+                    'code',
+                    "HTTP code for this response",
+                    null,
+                    'string',
+                    null
+                ], 
+                [
+                    'message',
+                    "In case of status 'error', contain the error message from server",
+                    null,
+                    'string',
+                    null
+                ], 
+                [
+                    'status',
+                    "Status of the call, could be 'ok' or 'error'",
+                    null,
+                    'string',
+                    null
+                ], 
+                [
+                    'data',
+                    "Data send for the current call, could be an object or an array depending of call",
+                    null,
+                    'object',
+                    null
+                ]
+            ]
+        );
+        
         
 
-        if (!$this->manager->tablesExist($model->getTableName())) {
-            throw new GeneratorException(sprintf('Table %s does not exist', $model->getTableName()));
+        $swagger = $this->createBody(
+            $swagger,
+            "GenericObject",
+            "Generic object request",
+            "true",
+            "object"
+        );
+
+
+        $swagger[] = " */";
+        
+        return implode(PHP_EOL, $swagger);
+    }
+
+    public function createInfo($swagger, $description, $version, $title) {
+
+        $swagger[] = " * @OA\Info(";
+        $swagger[] = " *     description=\"" . $description . "\",";
+        $swagger[] = " *     version=\"" . $version . "\",";
+        $swagger[] = " *     title=\"" . $title . "\"";
+        $swagger[] = " * )";     
+        $swagger[] = " *"; 
+
+        return $swagger;
+    }
+
+    public function createSchema($swagger, $title, $description, $required, $properties) {
+
+        $swagger[] = " * @OA\Schema(";
+        $swagger[] = " *     schema=\"" . $title . "\",";
+        $swagger[] = " *     description=\"" . $description . "\",";
+        $swagger[] = " *     title=\"" . $title . "\",";
+        $swagger[] = " *     required={\"" . implode("\",\"", $required) . "\"},";
+        $swagger[] = " * "; 
+        $swagger[] = " *     @OA\Xml(";
+        $swagger[] = " *         name=\"" . $title . "\"";
+        $swagger[] = " *     ),";
+        
+        $swagger[] = " * ";  
+
+        foreach($properties as $property) {
+            $swagger = $this->createProperty($swagger, $property[0], $property[1], $property[2], $property[3], $property[4]);
+        }
+        
+        $swagger[sizeof($swagger) - 2] = " *     )";
+        $swagger[] = " * )";     
+        $swagger[] = " * "; 
+            
+        return $swagger;
+    }
+
+    public function createBody($swagger, $request, $description, $required, $type) {
+
+        $swagger[] = " * @OA\RequestBody(";
+        $swagger[] = " *     request=\"" . $request . "\",";
+        $swagger[] = " *     description=\"" . $description . "\",";
+        $swagger[] = " *     required=" . $required . ",";
+        $swagger[] = " * "; 
+        $swagger[] = " *     @OA\JsonContent(";
+        $swagger[] = " *         type=\"" . $type . "\"";
+        $swagger[] = " *     )"; 
+        $swagger[] = " * )";     
+        $swagger[] = " * "; 
+            
+        return $swagger;
+    }
+
+    public function createProperty($swagger, $property, $description, $default, $type, $item) {
+
+        $swagger[] = " *     @OA\Property(";
+        $swagger[] = " *         description=\"" . $description . "\",";
+        
+        if($default) {
+            $swagger[] = " *         default=\"" . $default . "\",";
+        }
+        
+        if($item) {
+            $swagger[] = " *         @OA\Items(ref=\"" . $item . "\"),";
         }
 
-        $method = new MethodModel('getValidationRules');
-        $method->addArgument(new ArgumentModel('mode', null, "'create'"));
-        $method->addArgument(new ArgumentModel('primaryKeyValue', null, 'null'));
-        $method->setBody('return array();');
-        $method->setDocBlock(new DocBlockModel('{@inheritdoc}'));
+        $swagger[] = " *         property=\"" . $property . "\",";
+        $swagger[] = " *         type=\"" . $type . "\"";
+        
+        
+            
+        $swagger[] = " *     ),";  
+        $swagger[] = " * "; 
 
-        $model->addMethod($method);
-
-        $this->setNamespace($model, $config)
-            ->setCustomProperties($model, $config)
-            ->setFields($model)
-            ->setCasts($model)
-            ->setRelations($model, $config);
-
-        $model->addSwaggerBlock();
-
-        return $model;
+            
+        return $swagger;
     }
 
     /**
@@ -200,12 +386,10 @@ class EloquentModelBuilder
                 $model->addMethod($method);
 
             }
-            
             $model->addProperty(new VirtualPropertyModel(
                 $colName,
                 $this->resolveType($column->getType()->getName()),
-                $column->getComment(),
-                $column->getNotNull()
+                $column->getComment()
             ));
 
             if (in_array($colName, $primaryColumnNames)) {

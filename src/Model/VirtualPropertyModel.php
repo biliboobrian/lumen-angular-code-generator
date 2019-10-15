@@ -29,12 +29,14 @@ class VirtualPropertyModel extends BasePropertyModel
 	 * @param string $name
 	 * @param string $type
 	 * @param string $comment
+	 * @param string $required
 	 */
-	public function __construct($name, $type = null, $comment = null)
+	public function __construct($name, $type = null, $comment = null, $required = null)
 	{
 		$this->setName($name)
 			->setType($type)
-			->setComment($comment);
+            ->setComment($comment)
+			->setRequired($required);
 	}
 
 	/**
@@ -72,6 +74,26 @@ class VirtualPropertyModel extends BasePropertyModel
     public function setType($type)
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRequired()
+    {
+        return $this->required;
+    }
+
+    /**
+     * @param string $required
+     *
+     * @return $this
+     */
+    public function setRequired($required)
+    {
+        $this->required = $required;
 
         return $this;
     }

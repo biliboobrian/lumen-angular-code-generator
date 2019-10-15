@@ -51,6 +51,30 @@ class EloquentModel extends ClassModel
         }
     }
 
+    public function addSwaggerBlock()
+    {
+        $this->swaggerBlock[] = " ";
+        $this->swaggerBlock[] = "@OA\Schema(";
+        $this->swaggerBlock[] = "    schema=\"" . $this->name->getName() . "\",";
+        $this->swaggerBlock[] = "     title=\"" . $this->name->getName()  . "\",";
+
+        $required = array();
+
+        foreach ($this->properties as $property) {
+            if ($property instanceof VirtualPropertyModel && $property->getRequired()) {
+
+                $required[] = $property->getName();
+            }
+        }
+
+        $this->swaggerBlock[] = "     required={\"" . implode("\",\"", $required) . "\"},";
+        $this->swaggerBlock[] = " ";
+        $this->swaggerBlock[] = "     @OA\Xml(";
+        $this->swaggerBlock[] = "         name=\"" . $this->name->getName() . "\"";
+        $this->swaggerBlock[] = "     )";
+        $this->swaggerBlock[] = " )";
+    }
+
     /**
      * @param Relation $relation
      * @return $this
@@ -111,7 +135,7 @@ class EloquentModel extends ClassModel
         $reflectionObject = new \ReflectionObject($relation);
         $name             = Str::camel($reflectionObject->getShortName());
 
-        $arguments = [$relation->getConfig()->get('lumen_model_namespace') .'\\'. Str::studly($relation->getTableName())];
+        $arguments = [$relation->getConfig()->get('lumen_model_namespace') . '\\' . Str::studly($relation->getTableName())];
         if ($relation instanceof BelongsToMany) {
             $defaultJoinTableName = TitleHelper::getDefaultJoinTableName($this->tableName, $relation->getTableName());
             $joinTableName        = $relation->getJoinTable() === $defaultJoinTableName

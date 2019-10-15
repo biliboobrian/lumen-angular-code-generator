@@ -70,6 +70,15 @@ trait ValueTrait
                 $value = '[' . implode(', ', $parts) . ']';
 
                 break;
+                
+            case 'object':
+                $parts = [];
+                foreach ($value as $key => $item) {
+                    $parts[] = "'" . $key ."' => " . $this->renderTyped($item);
+                }
+                $value = '[' . implode(', ', $parts) . ']';
+
+                break;
             default:
                 $value = null; // TODO: how to render null explicitly?
         }

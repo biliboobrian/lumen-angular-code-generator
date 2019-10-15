@@ -50,6 +50,16 @@ class ClassModel extends RenderableModel
     protected $methods = [];
 
     /**
+     * @var string[]
+     */
+    protected $swaggerBlock = [];
+
+    /**
+     * @var string[]
+     */
+    protected $swaggerController = [];
+
+    /**
      * {@inheritDoc}
      */
     public function toLines()
@@ -67,6 +77,12 @@ class ClassModel extends RenderableModel
             $lines[] = $this->docBlock->render();
         }
         $lines[] = $this->name->render();
+        $lines[] = $this->processSwaggerProperties($lines);
+
+        foreach($this->swaggerController as $line) {
+            $lines[] = $line;
+        } 
+        
         if (count($this->traits) > 0) {
             $lines[] = $this->renderArrayLn($this->traits, 4);
         }
@@ -244,6 +260,9 @@ class ClassModel extends RenderableModel
             }
         }
 
+        $content = array_merge($content, $this->swaggerBlock);
+
+
         if ($content) {
             if ($this->docBlock === null) {
                 $this->docBlock = new DocBlockModel();
@@ -264,6 +283,74 @@ class ClassModel extends RenderableModel
         if (count($properties) > 0) {
             $lines[] = $this->renderArrayLn($properties, 4, str_repeat(PHP_EOL, 1));
         }
+    }
+
+    /**
+     * @param array $lines
+     */
+    protected function processSwaggerProperties(&$lines)
+    {
+        $properties = array_filter($this->properties, function ($property) {
+            return !$property instanceof VirtualPropertyModel;
+        });
+        if (count($properties) > 0) {
+            $lines[] = "    /** "; 
+            foreach ($this->properties as $property) {
+                if ($property instanceof VirtualPropertyModel) {
+                    $lines[] = "     * @OA\Property(";
+
+                    if($this->getSwaggerFormat($property->type)) {
+                        $lines[] = "     *    format=\"" . $this->getSwaggerFormat($property->getType()) . "\",";
+                    }
+
+                    $lines = $this->getSwaggerType($lines, $property->getType());
+                    $lines[] = "     *    property=\"" . $property->getName() . "\"";
+                    $lines[] = "     * )";  
+                    $lines[] = "     * "; 
+                }
+            }
+            $lines[] = "     */ "; 
+        }
+    }
+
+    protected function getSwaggerFormat($type) {
+        switch ($type) {
+            case 'int':
+                return "int64";
+                break;
+            
+            default:
+                return null;
+                break;
+        }
+    }
+
+    protected function getSwaggerType($lines, $type) {
+        switch ($type) {
+            case 'int':
+                $lines[] = "     *    type=\"integer\",";
+                break;
+            case 'float':
+                $lines[] = "     *    type=\"float\",";
+                break;
+            case 'string':
+                $lines[] = "     *    type=\"string\",";
+                break;
+            case '\Carbon\Carbon':
+                $lines[] = "     *    type=\"date\",";
+                break;
+            default:
+                if(strpos($type,"[]")) {
+                    $lines[] = '     *    @OA\Items(ref="#/components/schemas/' . substr($type,0, -2) . '"),';
+                    $lines[] = '     *    type="array",';
+                    
+                } else {
+                    $lines[] = '     *    ref="#/components/schemas/' . $type . '",';
+                    
+                }
+                break;
+        }
+        return $lines;
     }
 
     /**

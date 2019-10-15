@@ -11,6 +11,7 @@ use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenBulkControllerCo
 use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenRoutesCommand;
 use biliboobrian\lumenAngularCodeGenerator\Command\GenerateAngularModelCommand;
 use biliboobrian\lumenAngularCodeGenerator\Command\GenerateAngularModelsCommand;
+use biliboobrian\lumenAngularCodeGenerator\Command\GenerateLumenSwaggerInfoCommand;
 
 /**
  * Class GeneratorServiceProvider
@@ -32,6 +33,7 @@ class GeneratorServiceProvider extends ServiceProvider
             GenerateLumenRoutesCommand::class,
             GenerateAngularModelCommand::class,
             GenerateAngularModelsCommand::class,
+            GenerateLumenSwaggerInfoCommand::class,
             
         ]);
 

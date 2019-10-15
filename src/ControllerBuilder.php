@@ -70,6 +70,8 @@ class ControllerBuilder
             ->setFields($ctrl)
             ->setRelations($ctrl);
 
+        $ctrl->addSwaggerBlock();
+
         return $ctrl;
     }
 

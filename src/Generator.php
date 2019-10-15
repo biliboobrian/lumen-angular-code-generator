@@ -13,6 +13,12 @@ use biliboobrian\lumenAngularCodeGenerator\Exception\GeneratorException;
 class Generator
 {
     /**
+     * @var SwaggerBuilder
+     */
+    protected $swaggerBuilder;
+
+    
+    /**
      * @var EloquentModelBuilder
      */
     protected $modelBuilder;
@@ -41,10 +47,14 @@ class Generator
      * Generator constructor.
      * @param EloquentModelBuilder $ModelBuilder
      */
-    public function __construct(EloquentModelBuilder $modelBuilder, ControllerBuilder $ctrlBuilder)
-    {
+    public function __construct(
+        EloquentModelBuilder $modelBuilder, 
+        ControllerBuilder $ctrlBuilder,
+        SwaggerBuilder $swaggerBuilder
+    ) {
         $this->modelBuilder = $modelBuilder;
         $this->ctrlBuilder = $ctrlBuilder;
+        $this->swaggerBuilder = $swaggerBuilder;
     }
     
 
@@ -145,6 +155,22 @@ class Generator
         }
         return $ctrl;
     }
+
+    /**
+     * @param Config $config
+     * @return ClassModel
+     * @throws GeneratorException
+     */
+    public function generateSwaggerController(Config $config)
+    {
+
+        $info = $this->swaggerBuilder->createInfoFile($config);
+        file_put_contents(app_path().'/info.php', $info);
+
+        return $info;
+    }
+
+    
 
      /**
      * @param Config $config

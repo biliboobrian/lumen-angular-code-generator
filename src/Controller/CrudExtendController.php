@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use biliboobrian\MicroServiceCore\Pagination\Paginator;
 use biliboobrian\MicroServiceCrud\Http\Controllers\CrudController;
+use Exception;
 
 class CrudExtendController extends CrudController
 {
@@ -442,8 +443,12 @@ class CrudExtendController extends CrudController
         $itemRelation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
         $relationQuery = $item->{$itemRelation}();
 
-        $relatedItem = call_user_func([get_class($relationQuery->getRelated()), 'findOrFail'], $idRelation);
-        $relationQuery->detach();
+        if(method_exists($relationQuery, 'save')) {
+            $relationQuery->delete();
+        } else {
+            $relationQuery->dissociate();
+            $item->save();
+        }
 
         // Update the item.
         return $this->getById($request, $item->getPrimaryKeyValue());
@@ -504,10 +509,14 @@ class CrudExtendController extends CrudController
     public function getRelation(Request $request, $id, $relation)
     {
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
-        $tableName = substr(str_replace('-', '_', $relation), 0, -1);
         $relation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
         $relations = $item->$relation;
 
-        return $this->generateResponse($tableName, $relations->toArray());
+        if($relations) {
+            return $this->generateResponse($relations->getTable(), $relations->toArray());
+        } else {
+            $relationQuery = $item->{$relation}();
+            return $this->generateResponse($relationQuery->getRelated()->getTable() , []);
+        }
     }
 }
