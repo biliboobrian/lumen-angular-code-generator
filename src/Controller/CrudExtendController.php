@@ -5,11 +5,10 @@ namespace biliboobrian\lumenAngularCodeGenerator\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use biliboobrian\MicroServiceCore\Pagination\Paginator;
 use biliboobrian\MicroServiceCrud\Http\Controllers\CrudController;
-use Exception;
+use Illuminate\Support\Facades\Log;
 
 class CrudExtendController extends CrudController
 {
@@ -20,7 +19,22 @@ class CrudExtendController extends CrudController
      */
     public function get(Request $request)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | GET');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | GET');
+            }
+
+            Log::channel('crud')->info('    |  > FILTERS   : ' . $request->input('filters'));
+            Log::channel('crud')->info('    |  > RELATIONS : ' . $request->input('relations'));
+            Log::channel('crud')->info('    |  > SORT      : ' . $request->input('sort'));
+        }
+
         $relations = json_decode($request->input('relations'));
+
         $tags = null;
         $list = null;
 
@@ -93,6 +107,19 @@ class CrudExtendController extends CrudController
      */
     public function getById(Request $request, $id)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | GET BY ID');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | GET BY ID');
+            }
+
+            Log::channel('crud')->info('    |  > ID        : ' . $id);
+            Log::channel('crud')->info('    |  > RELATIONS : ' . $request->input('relations'));
+        }
+
         $relations = json_decode($request->input('relations'));
         $tags = null;
         $list = null;
@@ -149,6 +176,19 @@ class CrudExtendController extends CrudController
      */
     public function update(Request $request, $id)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | UPDATE');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | UPDATE');
+            }
+
+            Log::channel('crud')->info('    |  > ID        : ' . $id);
+            Log::channel('crud')->info('    |  > DATA      : ' . $request->all());
+        }
+
         // Get the item.
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
 
@@ -356,6 +396,19 @@ class CrudExtendController extends CrudController
      */
     public function store(Request $request)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | STORE');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | STORE');
+            }
+
+            Log::channel('crud')->info('    |  > DATA      : ' . $request->all());
+            Log::channel('crud')->info('    |  > RELATIONS : ' . $request->input('relations'));
+        }
+
         // Instantiate a new model item.
         $modelClass = $this->getModelClass();
         $item = new $modelClass;
@@ -386,6 +439,20 @@ class CrudExtendController extends CrudController
      */
     public function createRelation(Request $request, $id, $relation, $idRelation)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | CREATE RELATION');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | CREATE RELATION');
+            }
+        
+            Log::channel('crud')->info('    |  > ID       : ' . $id);
+            Log::channel('crud')->info('    |  > RELATION : ' . $relation);
+            Log::channel('crud')->info('    |  > REL ID   : ' . $idRelation);
+        }
+
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
         $itemRelation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
         $relationQuery = $item->{$itemRelation}();
@@ -412,6 +479,20 @@ class CrudExtendController extends CrudController
      */
     public function deleteRelation(Request $request, $id, $relation, $idRelation)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | DELETE RELATION');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | DELETE RELATION');
+            }
+        
+            Log::channel('crud')->info('    |  > ID       : ' . $id);
+            Log::channel('crud')->info('    |  > RELATION : ' . $relation);
+            Log::channel('crud')->info('    |  > REL ID   : ' . $idRelation);
+        }
+
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
 
         $itemRelation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
@@ -438,6 +519,19 @@ class CrudExtendController extends CrudController
      */
     public function emptyRelation(Request $request, $id, $relation)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | EMPTY RELATION');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | EMPTY RELATION');
+            }
+        
+            Log::channel('crud')->info('    |  > ID       : ' . $id);
+            Log::channel('crud')->info('    |  > RELATION : ' . $relation);
+        }
+        
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
 
         $itemRelation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
@@ -463,6 +557,20 @@ class CrudExtendController extends CrudController
      */
     public function createRelationWithObject(Request $request, $id, $relation)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | CREATE RELATION WITH OBJECT');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | CREATE RELATION WITH OBJECT');
+            }
+
+            Log::channel('crud')->info('    |  > DATA      : ' . $request->all());
+            Log::channel('crud')->info('    |  > ID        : ' . $id);
+            Log::channel('crud')->info('    |  > RELATION  : ' . $relation);
+        }
+
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
         $itemRelation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
         $relationQuery = $item->{$itemRelation}();
@@ -508,6 +616,19 @@ class CrudExtendController extends CrudController
      */
     public function getRelation(Request $request, $id, $relation)
     {
+        $crudChannel = env('LOG_CRUD_CHANNEL', '');
+
+        if($crudChannel !== '') {
+            if($request->user) {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass  . ' | ' . $request->user->username . ' | GET RELATION');
+            } else {
+                Log::channel('crud')->info($_SERVER['REMOTE_ADDR'] . ' | ' . $this->modelBaseClass . ' | GET RELATION');
+            }
+    
+            Log::channel('crud')->info('    |  > ID        : ' . $id);
+            Log::channel('crud')->info('    |  > RELATION  : ' . $relation);
+        }
+        
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
         $relation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
         $relations = $item->$relation;
