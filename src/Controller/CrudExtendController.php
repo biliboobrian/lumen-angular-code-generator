@@ -336,14 +336,18 @@ class CrudExtendController extends CrudController
 
     private function applyFilterMembers($filters, $andLink, &$query) {
         foreach ($filters as $filter) {
-           
+            $c = $filter->column;
+            if($filter->type === 'date') {
+                $c = 'TO_CHAR(' . $filter->column . ', \'YYYY-MM-DD\')';
+            }
+
             if ($andLink) {
                 if(!$filter->field) {
                     if ($filter->operation === 'like') {
                         if(strpos($filter->value, '*') === 0) {
-                            $query->whereRaw('lower('. $filter->column .') '. $filter->operation . ' ?', '%' . strtolower(substr($filter->value, 1)) . '%');
+                            $query->whereRaw('lower('. $c.') '. $filter->operation . ' ?', '%' . strtolower(substr($filter->value, 1)) . '%');
                         } else {
-                            $query->whereRaw('lower('. $filter->column .') '. $filter->operation . ' ?',  strtolower($filter->value) . '%');
+                            $query->whereRaw('lower('. $c .') '. $filter->operation . ' ?',  strtolower($filter->value) . '%');
                         }
                         
                     } else if ($filter->operation === 'is null') {
@@ -351,12 +355,7 @@ class CrudExtendController extends CrudController
                     } else if ($filter->operation === 'in') {
                         $query->whereIn($filter->column, explode(',', $filter->value));
                     } else {
-                        if($filter->type === 'date') {
-                            $query->whereRaw('TO_CHAR(' . $filter->column . ', \'YYYY-MM-DD\') ' . $filter->operation . ' ?', $filter->value);
-                        } else {
-                            $query->where($filter->column, $filter->operation, $filter->value);
-                        }
-                        
+                        $query->where($c, $filter->operation, $filter->value);
                     }
                 } else {
                     $query->whereColumn($filter->column, $filter->operation, $filter->value);
@@ -366,20 +365,16 @@ class CrudExtendController extends CrudController
                 if(!$filter->field) {
                     if ($filter->operation === 'like') {
                         if(strpos($filter->value, '*') === 0) {
-                            $query->orWhereRaw('lower('. $filter->column .') '. $filter->operation . ' ?', '%' . strtolower(substr($filter->value, 1)) . '%');
+                            $query->orWhereRaw('lower('. $c .') '. $filter->operation . ' ?', '%' . strtolower(substr($filter->value, 1)) . '%');
                         } else {
-                            $query->orWhereRaw('lower('. $filter->column .') '. $filter->operation . ' ?',  strtolower($filter->value) . '%');
+                            $query->orWhereRaw('lower('. $c .') '. $filter->operation . ' ?',  strtolower($filter->value) . '%');
                         }
                     } else if ($filter->operation === 'is null'){
-                        $query->orWhereNull($filter->orWhereColumn);
+                        $query->orWhereNull($filter->column);
                     } else if ($filter->operation === 'in') {
                         $query->orWhereIn($filter->column, explode(',', $filter->value));
                     } else {
-                        if($filter->type === 'date') {
-                            $query->orWhereRaw('TO_CHAR(' . $filter->column . ', \'YYYY-MM-DD\') ' . $filter->operation . ' ?', $filter->value);
-                        } else {
-                            $query->orWhere($filter->column, $filter->operation, $filter->value);
-                        }
+                        $query->orWhere($c, $filter->operation, $filter->value);
                     }
                 } else {
                     $query->orWhereColumn($filter->column, $filter->operation, $filter->value);
