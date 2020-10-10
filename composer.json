@@ -1,6 +1,6 @@
 {
     "name": "biliboobrian/lumen-angular-code-generator",
-    "description": "Model, controller, provider and service generator for Lumen 5.6 and Angular 6 from DB schema",
+    "description": "Model, controller, provider and service generator for Lumen 5+ and Angular 6+ from DB schema",
     "keywords": ["code generator", "scaffolding", "lumen", "angular", "model", "controller", "service", "provider"],
     "license": "MIT",
     "autoload": {
@@ -11,12 +11,12 @@
     "require": {
       "doctrine/dbal": "^2.5",
       "biliboobrian/microservice-crud": "^3.0",
-      "laravel/lumen-framework": "5.* || 6.*"
+      "laravel/lumen-framework": "5.* || 6.* || 7.*"
     },
     "authors": [{ 
         "name": "biliboobrian", 
         "email": "biliboobrian@yahoo.fr"
     }],
-    "version": "1.0.32",
+    "version": "1.0.33",
     "minimum-stability": "dev"
   }

@@ -2,7 +2,7 @@
 
 !! WORK IN PROGRESS > ANGULAR GENERATOR !!
 
-Model, controller provider and service generator for lumen 5.6 and angular 6 from DB schema.
+Model, controller provider and service generator for lumen 5+ and angular 6+ from DB schema.
 
 ## Installation
 
