@@ -339,6 +339,8 @@ class CrudExtendController extends CrudController
             $c = $filter->column;
             if($filter->type === 'date') {
                 $c = 'TO_CHAR(' . $filter->column . ', \'YYYY-MM-DD\')';
+            } else if($filter->type === 'int') {
+                $c = $filter->column . '||\'\'';
             }
 
             if ($andLink) {
