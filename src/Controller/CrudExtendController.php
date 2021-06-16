@@ -357,7 +357,11 @@ class CrudExtendController extends CrudController
                     } else if ($filter->operation === 'in') {
                         $query->whereIn($filter->column, explode(',', $filter->value));
                     } else {
-                        $query->where($c, $filter->operation, $filter->value);
+                        if($filter->type === 'date') {
+                            $query->whereRaw($c .' '. $filter->operation . ' ?', $filter->value);
+                        } else {
+                            $query->where($c, $filter->operation, $filter->value);
+                        }
                     }
                 } else {
                     $query->whereColumn($filter->column, $filter->operation, $filter->value);
@@ -376,7 +380,11 @@ class CrudExtendController extends CrudController
                     } else if ($filter->operation === 'in') {
                         $query->orWhereIn($filter->column, explode(',', $filter->value));
                     } else {
-                        $query->orWhere($c, $filter->operation, $filter->value);
+                        if($filter->type === 'date') {
+                            $query->orWhereRaw($c .' '. $filter->operation . ' ?', $filter->value);
+                        } else {
+                            $query->orWhere($c, $filter->operation, $filter->value);
+                        }
                     }
                 } else {
                     $query->orWhereColumn($filter->column, $filter->operation, $filter->value);
@@ -629,11 +637,11 @@ class CrudExtendController extends CrudController
         $item = call_user_func([$this->getModelClass(), 'findOrFail'], $id);
         $relation = lcfirst(str_replace('-', '', ucwords($relation, '-')));
         $relations = $item->$relation;
+        $relationQuery = $item->{$relation}();
 
         if($relations) {
-            return $this->generateResponse($relations->getTable(), $relations->toArray());
+            return $this->generateResponse($relationQuery->getRelated()->getTable(), $relations->toArray());
         } else {
-            $relationQuery = $item->{$relation}();
             return $this->generateResponse($relationQuery->getRelated()->getTable() , []);
         }
     }
