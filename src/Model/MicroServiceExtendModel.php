@@ -6,6 +6,7 @@
 
 namespace biliboobrian\lumenAngularCodeGenerator\Model;
 
+use DateTimeInterface;
 use biliboobrian\MicroServiceModelUtils\Models\MicroServiceBaseModel;
 
 /**
@@ -29,5 +30,10 @@ abstract class MicroServiceExtendModel extends MicroServiceBaseModel
     public function getDates()
     {
         return $this->dates;
+    }
+
+    protected function serializeDate(DateTimeInterface $date) : string
+    {
+        return $date->format('Y-m-d H:i:s');
     }
 }
